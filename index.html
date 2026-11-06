@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BlockNite 2D - Dragons, Leviathans & Titans Edition</title>
+    <title>BlockNite 2D - Ultra Detailed Dragons & Leviathans</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
         body { background-color: #05070f; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
@@ -86,14 +86,14 @@
 
     <div id="boss-tester-hud">
         <span style="font-size:10px; font-weight:bold; color:#f59e0b; align-self:center; margin-right:4px;">🧪 PROBAR JEFES:</span>
-        <button class="tester-btn" onclick="jumpToBossWave(10)">[F1] Dragón Fuego</button>
+        <button class="tester-btn" onclick="jumpToBossWave(10)">[F1] Dragón Magma</button>
         <button class="tester-btn" onclick="jumpToBossWave(20)">[F2] Leviatán Elec.</button>
         <button class="tester-btn" onclick="jumpToBossWave(30)">[F3] Dragón Viento</button>
         <button class="tester-btn" onclick="jumpToBossWave(40)">[F4] Leviatán Mar</button>
         <button class="tester-btn" onclick="jumpToBossWave(50)">[F5] Leviatán Galáctico</button>
         <button class="tester-btn" onclick="jumpToBossWave(60)">[F6] Titán Roca</button>
-        <button class="tester-btn" onclick="jumpToBossWave(70)">[F7] Dragón Tóxico</button>
-        <button class="tester-btn" onclick="jumpToBossWave(80)">[F8] Titán Solar</button>
+        <button class="tester-btn" onclick="jumpToBossWave(70)">[F7] Wyvern Tóxico</button>
+        <button class="tester-btn" onclick="jumpToBossWave(80)">[F8] Titán Mecha</button>
         <button class="tester-btn" style="border-color:#10B981;" onclick="addCheatGold()">[M] +$5k</button>
     </div>
 
@@ -599,15 +599,15 @@
         else if (type === 'shieldGen') { enemy.color = '#38BDF8'; enemy.speed = 1.5; enemy.health = baseHpScaling * 1.4; enemy.radius = 22; enemy.goldValue = 18; }
         else if (type === 'tank') { enemy.color = '#10B981'; enemy.speed = 1.2; enemy.health = baseHpScaling * 2.5; enemy.radius = 27; enemy.goldValue = 25; }
         
-        // JEFES RECONSTRUIDOS: DRAGONES, LEVIATANES Y TITANES
-        else if (type === 'boss_fire') { enemy.color = '#EF4444'; enemy.speed = 1.05; enemy.health = baseHpScaling * 60.0; enemy.radius = 125; enemy.goldValue = 500; enemy.bossName = "Dragón de Magma Titan"; }
-        else if (type === 'boss_electric') { enemy.color = '#FACC15'; enemy.speed = 1.15; enemy.health = baseHpScaling * 55.0; enemy.radius = 130; enemy.goldValue = 500; enemy.bossName = "Leviatán Tormenta Eléctrica"; }
-        else if (type === 'boss_wind') { enemy.color = '#34D399'; enemy.speed = 1.45; enemy.health = baseHpScaling * 50.0; enemy.radius = 115; enemy.goldValue = 500; enemy.bossName = "Dragón Cuchilla del Viento"; }
-        else if (type === 'boss_water') { enemy.color = '#38BDF8'; enemy.speed = 0.85; enemy.health = baseHpScaling * 65.0; enemy.radius = 135; enemy.goldValue = 500; enemy.bossName = "Leviatán Acorazado del Mar"; }
-        else if (type === 'boss_galactic') { enemy.color = '#A855F7'; enemy.speed = 1.0; enemy.health = baseHpScaling * 70.0; enemy.radius = 140; enemy.goldValue = 650; enemy.bossName = "Leviatán Cósmico Galáctico"; }
-        else if (type === 'boss_earth') { enemy.color = '#D97706'; enemy.speed = 0.75; enemy.health = baseHpScaling * 85.0; enemy.radius = 150; enemy.goldValue = 650; enemy.bossName = "Titán Colosal de Piedra"; }
-        else if (type === 'boss_toxic') { enemy.color = '#84CC16'; enemy.speed = 1.55; enemy.health = baseHpScaling * 58.0; enemy.radius = 120; enemy.goldValue = 650; enemy.bossName = "Wyvern Dragón Tóxico"; }
-        else if (type === 'boss_solar') { enemy.color = '#EC4899'; enemy.speed = 0.9; enemy.health = baseHpScaling * 90.0; enemy.radius = 155; enemy.goldValue = 800; enemy.bossName = "Titán Mecha Solar"; }
+        // JEFES ANATÓMICAMENTE DETALLADOS: DRAGONES Y LEVIATANES ROBUSTOS
+        else if (type === 'boss_fire') { enemy.color = '#EF4444'; enemy.speed = 1.1; enemy.health = baseHpScaling * 65.0; enemy.radius = 135; enemy.goldValue = 500; enemy.bossName = "Dragón Titán de Magma"; }
+        else if (type === 'boss_electric') { enemy.color = '#FACC15'; enemy.speed = 1.25; enemy.health = baseHpScaling * 60.0; enemy.radius = 140; enemy.goldValue = 500; enemy.bossName = "Leviatán Eléctrico Colosal"; }
+        else if (type === 'boss_wind') { enemy.color = '#34D399'; enemy.speed = 1.5; enemy.health = baseHpScaling * 52.0; enemy.radius = 120; enemy.goldValue = 500; enemy.bossName = "Dragón Guadaña del Viento"; }
+        else if (type === 'boss_water') { enemy.color = '#38BDF8'; enemy.speed = 0.9; enemy.health = baseHpScaling * 70.0; enemy.radius = 145; enemy.goldValue = 500; enemy.bossName = "Leviatán Acorazado del Mar"; }
+        else if (type === 'boss_galactic') { enemy.color = '#A855F7'; enemy.speed = 1.05; enemy.health = baseHpScaling * 75.0; enemy.radius = 150; enemy.goldValue = 650; enemy.bossName = "Leviatán Cósmico Galáctico"; }
+        else if (type === 'boss_earth') { enemy.color = '#D97706'; enemy.speed = 0.7; enemy.health = baseHpScaling * 90.0; enemy.radius = 160; enemy.goldValue = 650; enemy.bossName = "Titán Escarabajo de Roca"; }
+        else if (type === 'boss_toxic') { enemy.color = '#84CC16'; enemy.speed = 1.6; enemy.health = baseHpScaling * 60.0; enemy.radius = 125; enemy.goldValue = 650; enemy.bossName = "Wyvern Dragón Tóxico"; }
+        else if (type === 'boss_solar') { enemy.color = '#EC4899'; enemy.speed = 0.95; enemy.health = baseHpScaling * 95.0; enemy.radius = 165; enemy.goldValue = 800; enemy.bossName = "Titán Dragón Mecha Solar"; }
 
         // SÚBDITOS
         else if (type.startsWith('minion_')) { enemy.color = '#CBD5E1'; enemy.speed = 4.5; enemy.health = baseHpScaling * 0.35; enemy.radius = 12; enemy.damage = 18; enemy.goldValue = 4; }
@@ -1098,50 +1098,42 @@
                 else if (e.type.startsWith('boss_')) {
                     e.animTick += dt * 4.0;
 
-                    // DINÁMICAS DE MOVIMIENTO DE DRAGONES, LEVIATANES Y TITANES
+                    // COMPORTAMIENTOS DINÁMICOS DE DRAGONES Y LEVIATANES
                     if (e.type === 'boss_fire') {
-                        // Dragón de Fuego: Vuelo con arremetida frontal
                         const rush = Math.sin(e.animTick * 2) > 0.6 ? 2.3 : 0.8;
                         e.x += Math.cos(angle) * e.speed * rush;
                         e.y += Math.sin(angle) * e.speed * rush;
                     } 
                     else if (e.type === 'boss_electric') {
-                        // Leviatán Eléctrico: Nado sinuoso serpentino
                         const snakeAngle = angle + Math.sin(e.animTick * 2.5) * 0.55;
                         e.x += Math.cos(snakeAngle) * e.speed;
                         e.y += Math.sin(snakeAngle) * e.speed;
                     }
                     else if (e.type === 'boss_wind') {
-                        // Dragón Viento: Vuelo ágil en picado
                         const dash = Math.sin(e.animTick * 3.5) > 0.4 ? 2.6 : 0.4;
                         e.x += Math.cos(angle) * e.speed * dash;
                         e.y += Math.sin(angle) * e.speed * dash;
                     }
                     else if (e.type === 'boss_water') {
-                        // Leviatán Marino: Desplazamiento de marea acorazado
                         const waveAngle = angle + Math.cos(e.animTick * 1.8) * 0.4;
                         e.x += Math.cos(waveAngle) * e.speed;
                         e.y += Math.sin(waveAngle) * e.speed;
                     }
                     else if (e.type === 'boss_galactic') {
-                        // Leviatán Galáctico: Propulsión de vacío espacial por ráfagas
                         const pulse = Math.pow(Math.sin(e.animTick * 2), 4) * 3.5;
                         e.x += Math.cos(angle) * e.speed * pulse;
                         e.y += Math.sin(angle) * e.speed * pulse;
                     }
                     else if (e.type === 'boss_earth') {
-                        // Titán de Roca: Paso pesado colosal e inquebrantable
                         e.x += Math.cos(angle) * e.speed;
                         e.y += Math.sin(angle) * e.speed;
                     }
                     else if (e.type === 'boss_toxic') {
-                        // Wyvern Tóxico: Vuelo caótico e impredecible
                         const zigZag = angle + Math.sin(e.animTick * 5) * 0.75;
                         e.x += Math.cos(zigZag) * e.speed * 1.3;
                         e.y += Math.sin(zigZag) * e.speed * 1.3;
                     }
                     else if (e.type === 'boss_solar') {
-                        // Titán Mecha Solar: Avance táctico imparable
                         e.x += Math.cos(angle) * e.speed * 0.9;
                         e.y += Math.sin(angle) * e.speed * 0.9;
                     }
@@ -1541,231 +1533,264 @@
                 ctx.shadowBlur = 25;
 
                 // -------------------------------------------------------------
-                // 1. DRAGÓN DE FUEGO (TITAN DRAGÓN DE MAGMA)
+                // 1. DRAGÓN TITÁN DE MAGMA (ULTRA DETALLADO CON ALAS ARTICULADAS)
                 // -------------------------------------------------------------
                 if (e.type === 'boss_fire') {
-                    ctx.fillStyle = '#450A0A';
+                    ctx.fillStyle = '#2A0404';
                     ctx.strokeStyle = '#EF4444';
                     ctx.lineWidth = 3;
 
-                    // ALAS GIGANTES DE DRAGÓN DE FUEGO (ALTEANDO)
-                    const wingFlap = Math.sin(e.animTick * 3) * 20;
+                    // ALAS MEMBRANOSAS GIGANTES ARTICULADAS EN 3 SECCIONES
+                    const wingFlap = Math.sin(e.animTick * 3) * 22;
                     [-1, 1].forEach(side => {
                         ctx.beginPath();
-                        ctx.moveTo(-30, side * 20);
-                        ctx.lineTo(20, side * (120 + wingFlap));
-                        ctx.lineTo(-80, side * (90 + wingFlap));
-                        ctx.lineTo(-60, side * 30);
+                        ctx.moveTo(-20, side * 25);
+                        ctx.lineTo(40, side * (135 + wingFlap));
+                        ctx.lineTo(-20, side * (165 + wingFlap));
+                        ctx.lineTo(-70, side * (120 + wingFlap));
+                        ctx.lineTo(-90, side * (60 + wingFlap));
+                        ctx.lineTo(-65, side * 30);
                         ctx.closePath(); ctx.fill(); ctx.stroke();
+
+                        // Huesos/Venas de las alas
+                        ctx.beginPath();
+                        ctx.moveTo(-20, side * 25); ctx.lineTo(-20, side * (165 + wingFlap));
+                        ctx.moveTo(-20, side * 25); ctx.lineTo(-70, side * (120 + wingFlap));
+                        ctx.stroke();
                     });
 
-                    // CUERPO/ABDOMEN DE DRAGÓN
+                    // COLA CON PÚAS DE MAGMA
+                    ctx.beginPath(); ctx.moveTo(-90, -20); ctx.lineTo(-170, 0); ctx.lineTo(-90, 20); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+                    // CUERPO Y PECHO ENCARNADO
+                    ctx.fillStyle = '#450A0A';
                     ctx.beginPath();
-                    ctx.moveTo(-110, 0); ctx.lineTo(-40, -45); ctx.lineTo(20, -35); ctx.lineTo(60, 0); ctx.lineTo(20, 35); ctx.lineTo(-40, 45);
+                    ctx.moveTo(-100, 0); ctx.lineTo(-45, -55); ctx.lineTo(30, -40); ctx.lineTo(75, 0); ctx.lineTo(30, 40); ctx.lineTo(-45, 55);
                     ctx.closePath(); ctx.fill(); ctx.stroke();
 
-                    // CABEZA Y HOCICO DE DRAGÓN CON CUERNOS
-                    ctx.fillStyle = '#7F1D1D';
-                    ctx.beginPath(); ctx.moveTo(40, -25); ctx.lineTo(105, -10); ctx.lineTo(115, 0); ctx.lineTo(105, 10); ctx.lineTo(40, 25); ctx.closePath(); ctx.fill(); ctx.stroke();
-
-                    // CUERNOS DE DRAGÓN
+                    // NÚCLEO DE MAGMA EN EL PECHO
                     ctx.fillStyle = '#F97316';
-                    ctx.beginPath(); ctx.moveTo(45, -20); ctx.lineTo(15, -60); ctx.lineTo(30, -15); ctx.closePath(); ctx.fill(); ctx.stroke();
-                    ctx.beginPath(); ctx.moveTo(45, 20); ctx.lineTo(15, 60); ctx.lineTo(30, 15); ctx.closePath(); ctx.fill(); ctx.stroke();
+                    ctx.beginPath(); ctx.arc(10, 0, 18, 0, Math.PI * 2); ctx.fill();
 
-                    // OJOS DE FUEGO
-                    ctx.fillStyle = '#FEF08A';
-                    ctx.beginPath(); ctx.arc(75, -12, 6, 0, Math.PI * 2); ctx.fill();
-                    ctx.beginPath(); ctx.arc(75, 12, 6, 0, Math.PI * 2); ctx.fill();
+                    // CABEZA ESCAMADA CON FAUCES Y DIENTES
+                    ctx.fillStyle = '#7F1D1D';
+                    ctx.beginPath(); ctx.moveTo(50, -30); ctx.lineTo(125, -12); ctx.lineTo(135, 0); ctx.lineTo(125, 12); ctx.lineTo(50, 30); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+                    // DIENTES BLANCOS AFILADOS
+                    ctx.fillStyle = '#FFFFFF';
+                    for(let d = 0; d < 4; d++) {
+                        ctx.fillRect(85 + d * 9, -10, 4, 8);
+                        ctx.fillRect(85 + d * 9, 2, 4, 8);
+                    }
+
+                    // CORONA DE CUERNOS IMPONENTES
+                    ctx.fillStyle = '#F59E0B';
+                    ctx.beginPath(); ctx.moveTo(55, -25); ctx.lineTo(15, -75); ctx.lineTo(35, -20); ctx.closePath(); ctx.fill(); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(55, 25); ctx.lineTo(15, 75); ctx.lineTo(35, 20); ctx.closePath(); ctx.fill(); ctx.stroke();
                 }
 
                 // -------------------------------------------------------------
-                // 2. LEVIATÁN ELÉCTRICO (SERPIENTE MARINA DE TORMENTA)
+                // 2. LEVIATÁN ELÉCTRICO COLOSAL (SERPIENTE MARINA DE 8 SEGMENTOS)
                 // -------------------------------------------------------------
                 else if (e.type === 'boss_electric') {
-                    ctx.fillStyle = '#451A03';
+                    ctx.fillStyle = '#291305';
                     ctx.strokeStyle = '#FACC15';
                     ctx.lineWidth = 3;
 
-                    // CUERPO SEGMENTADO LEVIATÁN EN ONDULACIÓN SINUOSA
-                    for (let i = 1; i <= 6; i++) {
-                        const wave = Math.sin(e.animTick * 2 + i * 0.8) * 18;
-                        ctx.beginPath();
-                        ctx.arc(-25 - (i * 22), wave, 28 - (i * 2), 0, Math.PI * 2);
-                        ctx.fill(); ctx.stroke();
+                    // CUERPO LARGO Y ROBUSTO DE 8 SEGMENTOS ARTICULADOS
+                    for (let i = 8; i >= 1; i--) {
+                        const wave = Math.sin(e.animTick * 2.2 + i * 0.7) * 25;
+                        const segRadius = 38 - (i * 2.8);
+                        ctx.save();
+                        ctx.translate(-30 - (i * 24), wave);
+                        
+                        // Crestas Dorsales Eléctricas
+                        ctx.fillStyle = '#F59E0B';
+                        ctx.beginPath(); ctx.moveTo(0, -segRadius - 12); ctx.lineTo(10, -segRadius); ctx.lineTo(-10, -segRadius); ctx.closePath(); ctx.fill(); ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(0, segRadius + 12); ctx.lineTo(10, segRadius); ctx.lineTo(-10, segRadius); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+                        // Segmento Robustecido
+                        ctx.fillStyle = i % 2 === 0 ? '#451A03' : '#78350F';
+                        ctx.beginPath(); ctx.arc(0, 0, segRadius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                        ctx.restore();
                     }
 
-                    // ALETAS DORSALES ELÉCTRICAS
-                    [-1, 1].forEach(side => {
-                        ctx.beginPath();
-                        ctx.moveTo(0, side * 25); ctx.lineTo(-30, side * 75); ctx.lineTo(-45, side * 20);
-                        ctx.closePath(); ctx.fill(); ctx.stroke();
-                    });
-
-                    // CABEZA ANCHA DE LEVIATÁN CON FAUCES
+                    // CABEZA ANCHA COLOSAL DE LEVIATÁN
                     ctx.fillStyle = '#78350F';
-                    ctx.beginPath(); ctx.moveTo(10, -40); ctx.lineTo(85, -20); ctx.lineTo(105, 0); ctx.lineTo(85, 20); ctx.lineTo(10, 40); ctx.closePath(); ctx.fill(); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(10, -50); ctx.lineTo(105, -25); ctx.lineTo(125, 0); ctx.lineTo(105, 25); ctx.lineTo(10, 50); ctx.closePath(); ctx.fill(); ctx.stroke();
 
-                    // DIENTES DE RAYO/AGUIJÓN
+                    // CUERNOS Y ANTENAS DE TORMENTA
                     ctx.fillStyle = '#FEF08A';
-                    ctx.fillRect(85, -15, 25, 6);
-                    ctx.fillRect(85, 9, 25, 6);
+                    ctx.beginPath(); ctx.moveTo(40, -40); ctx.lineTo(120, -75); ctx.lineTo(60, -30); ctx.closePath(); ctx.fill(); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(40, 40); ctx.lineTo(120, 75); ctx.lineTo(60, 30); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+                    // OJOS BRILLANTES
+                    ctx.beginPath(); ctx.arc(80, -20, 7, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(80, 20, 7, 0, Math.PI * 2); ctx.fill();
                 }
 
                 // -------------------------------------------------------------
-                // 3. DRAGÓN DEL VIENTO (TITAN ALADO CON GUADAÑAS)
+                // 3. DRAGÓN GUADAÑA DEL VIENTO (AERODINÁMICO MULTI-ALA)
                 // -------------------------------------------------------------
                 else if (e.type === 'boss_wind') {
                     ctx.fillStyle = '#064E3B';
                     ctx.strokeStyle = '#34D399';
                     ctx.lineWidth = 3;
 
-                    // ALAS EN GUADAÑA AFILADAS DE DRAGÓN DE VIENTO
-                    const wingFlap = Math.cos(e.animTick * 4) * 15;
+                    // 4 ALAS CORTANTES EN FORMA DE GUADAÑA
+                    const wingFlap = Math.cos(e.animTick * 4) * 18;
                     [-1, 1].forEach(side => {
-                        ctx.beginPath();
-                        ctx.moveTo(10, side * 15);
-                        ctx.lineTo(80, side * (110 + wingFlap));
-                        ctx.lineTo(-40, side * (140 + wingFlap));
-                        ctx.lineTo(-20, side * 25);
-                        ctx.closePath(); ctx.fill(); ctx.stroke();
+                        // Ala Principal
+                        ctx.beginPath(); ctx.moveTo(10, side * 20); ctx.lineTo(95, side * (125 + wingFlap)); ctx.lineTo(-30, side * (155 + wingFlap)); ctx.lineTo(-25, side * 30); ctx.closePath(); ctx.fill(); ctx.stroke();
+                        // Ala Secundaria
+                        ctx.beginPath(); ctx.moveTo(-40, side * 15); ctx.lineTo(30, side * (100 + wingFlap)); ctx.lineTo(-60, side * (120 + wingFlap)); ctx.lineTo(-65, side * 20); ctx.closePath(); ctx.fill(); ctx.stroke();
                     });
 
-                    // CUERPO DELGADO Y ESTILIZADO DE DRAGÓN DE VIENTO
-                    ctx.beginPath(); ctx.moveTo(-90, -15); ctx.lineTo(10, -25); ctx.lineTo(50, 0); ctx.lineTo(10, 25); ctx.lineTo(-90, 15); ctx.closePath(); ctx.fill(); ctx.stroke();
+                    // CUERPO HIDRODINÁMICO ESTILIZADO
+                    ctx.beginPath(); ctx.moveTo(-110, -18); ctx.lineTo(20, -30); ctx.lineTo(65, 0); ctx.lineTo(20, 30); ctx.lineTo(-110, 18); ctx.closePath(); ctx.fill(); ctx.stroke();
 
-                    // CABEZA DE DRAGÓN AERODINÁMICA
+                    // CABEZA DE DRAGÓN DE VIENTO
                     ctx.fillStyle = '#047857';
-                    ctx.beginPath(); ctx.moveTo(40, -20); ctx.lineTo(95, 0); ctx.lineTo(40, 20); ctx.closePath(); ctx.fill(); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(50, -25); ctx.lineTo(115, 0); ctx.lineTo(50, 25); ctx.closePath(); ctx.fill(); ctx.stroke();
                 }
 
                 // -------------------------------------------------------------
-                // 4. LEVIATÁN DEL MAR (TITAN MARINO ACORAZADO)
+                // 4. LEVIATÁN ACORAZADO DEL MAR (ROBUSTO CON ESCAMAS SUPERPUESTAS)
                 // -------------------------------------------------------------
                 else if (e.type === 'boss_water') {
                     ctx.fillStyle = '#0369A1';
                     ctx.strokeStyle = '#38BDF8';
                     ctx.lineWidth = 3;
 
-                    // CAPARAZÓN Y ESCAMAS MARINAS
-                    ctx.beginPath();
-                    ctx.moveTo(-75, 0); ctx.lineTo(-30, -65); ctx.lineTo(40, -50); ctx.lineTo(75, 0); ctx.lineTo(40, 50); ctx.lineTo(-30, 65);
-                    ctx.closePath(); ctx.fill(); ctx.stroke();
-
-                    // TENAZAS Y ALETAS MARINAS DE LEVIATÁN
+                    // ALETAS DE PROFUNDIDAD LATERALES
                     [-1, 1].forEach(side => {
-                        ctx.beginPath();
-                        ctx.moveTo(25, side * 45); ctx.lineTo(85, side * 90); ctx.lineTo(115, side * 50); ctx.lineTo(75, side * 35);
-                        ctx.closePath(); ctx.fill(); ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(-30, side * 40); ctx.lineTo(-80, side * 110); ctx.lineTo(-90, side * 50); ctx.closePath(); ctx.fill(); ctx.stroke();
                     });
 
-                    // OJOS DE ABISMO
-                    ctx.fillStyle = '#BAE6FD';
-                    ctx.beginPath(); ctx.arc(45, -20, 8, 0, Math.PI * 2); ctx.fill();
-                    ctx.beginPath(); ctx.arc(45, 20, 8, 0, Math.PI * 2); ctx.fill();
+                    // CUERPO ACORAZADO ROBUSTO
+                    ctx.beginPath();
+                    ctx.moveTo(-110, 0); ctx.lineTo(-45, -75); ctx.lineTo(50, -60); ctx.lineTo(90, 0); ctx.lineTo(50, 60); ctx.lineTo(-45, 75);
+                    ctx.closePath(); ctx.fill(); ctx.stroke();
+
+                    // ESCAMAS DORSALES SUPERPUESTAS
+                    for(let s = 0; s < 4; s++) {
+                        ctx.beginPath();
+                        ctx.arc(-50 + s * 30, 0, 25 - s * 3, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+
+                    // TENAZAS / MANDÍBULAS MARINAS GIGANTES
+                    [-1, 1].forEach(side => {
+                        ctx.beginPath();
+                        ctx.moveTo(35, side * 45); ctx.lineTo(100, side * 95); ctx.lineTo(135, side * 55); ctx.lineTo(85, side * 35);
+                        ctx.closePath(); ctx.fill(); ctx.stroke();
+                    });
                 }
 
                 // -------------------------------------------------------------
-                // 5. LEVIATÁN GALÁCTICO (CÓSMICO TENTACULAR)
+                // 5. LEVIATÁN CÓSMICO GALÁCTICO (ALARGADO Y TENTACULAR)
                 // -------------------------------------------------------------
                 else if (e.type === 'boss_galactic') {
-                    ctx.fillStyle = '#3B0764';
+                    ctx.fillStyle = '#2E1065';
                     ctx.strokeStyle = '#C084FC';
                     ctx.lineWidth = 3;
 
-                    // MANTO Y NÚCLEO LEVIATÁN
-                    ctx.beginPath(); ctx.moveTo(-60, -45); ctx.lineTo(35, -45); ctx.lineTo(75, 0); ctx.lineTo(35, 45); ctx.lineTo(-60, 45); ctx.closePath(); ctx.fill(); ctx.stroke();
-
-                    // TENTÁCULOS DE LEVIATÁN CÓSMICO
-                    const tentacleWave = Math.sin(e.animTick * 3) * 18;
-                    for (let i = -4; i <= 4; i++) {
-                        const tLen = 130 + Math.abs(i) * 12;
-                        ctx.fillRect(35, i * 10 - 4, tLen + tentacleWave, 7);
-                        ctx.strokeRect(35, i * 10 - 4, tLen + tentacleWave, 7);
+                    // CUERPO ALARGADO CÓSMICO EN 4 SEGMENTOS
+                    for(let i = 4; i >= 1; i--) {
+                        const pulse = Math.sin(e.animTick * 2 + i) * 10;
+                        ctx.beginPath(); ctx.ellipse(-20 - (i * 30), pulse, 30, 45 - (i * 5), 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
                     }
 
-                    // OJOS CÓSMICOS
-                    ctx.fillStyle = '#E9D5FF';
-                    ctx.beginPath(); ctx.arc(20, -22, 10, 0, Math.PI * 2); ctx.fill();
-                    ctx.beginPath(); ctx.arc(20, 22, 10, 0, Math.PI * 2); ctx.fill();
+                    // CABEZA ANCHA Y NÚCLEO
+                    ctx.fillStyle = '#581C87';
+                    ctx.beginPath(); ctx.moveTo(-50, -50); ctx.lineTo(45, -50); ctx.lineTo(85, 0); ctx.lineTo(45, 50); ctx.lineTo(-50, 50); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+                    // TENTÁCULOS ESTELARES ONDULANTES
+                    const tentacleWave = Math.sin(e.animTick * 3) * 20;
+                    for (let i = -5; i <= 5; i++) {
+                        const tLen = 145 + Math.abs(i) * 12;
+                        ctx.fillRect(45, i * 9 - 4, tLen + tentacleWave, 7);
+                        ctx.strokeRect(45, i * 9 - 4, tLen + tentacleWave, 7);
+                    }
                 }
 
                 // -------------------------------------------------------------
-                // 6. TITÁN DE ROCA (COLOSAL DE MAGMA Y PIEDRA)
+                // 6. TITÁN ESCARABAJO DE ROCA (COLOSAL DE MAGMA Y PIEDRA)
                 // -------------------------------------------------------------
                 else if (e.type === 'boss_earth') {
-                    ctx.fillStyle = '#78350F';
+                    ctx.fillStyle = '#451A03';
                     ctx.strokeStyle = '#F59E0B';
                     ctx.lineWidth = 3.5;
 
                     // CORAZA GIGANTE POLIGONAL DE TITÁN
                     ctx.beginPath();
-                    ctx.moveTo(-95, 0); ctx.lineTo(-55, -70); ctx.lineTo(25, -65); ctx.lineTo(65, 0); ctx.lineTo(25, 65); ctx.lineTo(-55, 70);
+                    ctx.moveTo(-110, 0); ctx.lineTo(-65, -80); ctx.lineTo(35, -75); ctx.lineTo(75, 0); ctx.lineTo(35, 75); ctx.lineTo(-65, 80);
                     ctx.closePath(); ctx.fill(); ctx.stroke();
+
+                    // PLACAS DORSALES INTERNAS
+                    ctx.fillStyle = '#78350F';
+                    ctx.beginPath(); ctx.moveTo(-80, 0); ctx.lineTo(-40, -50); ctx.lineTo(20, -45); ctx.lineTo(45, 0); ctx.lineTo(20, 45); ctx.lineTo(-40, 50); ctx.closePath(); ctx.fill(); ctx.stroke();
 
                     // CABEZA DE TITÁN DE PIEDRA
                     ctx.fillStyle = '#B45309';
-                    ctx.beginPath(); ctx.moveTo(40, -40); ctx.lineTo(85, 0); ctx.lineTo(40, 40); ctx.closePath(); ctx.fill(); ctx.stroke();
-
-                    // HOMBRERAS Y ESCUDOS DE PIEDRA
-                    [-1, 1].forEach(side => {
-                        ctx.fillRect(-45, side * 60, 50, side * 30);
-                        ctx.strokeRect(-45, side * 60, 50, side * 30);
-                    });
+                    ctx.beginPath(); ctx.moveTo(50, -45); ctx.lineTo(100, 0); ctx.lineTo(50, 45); ctx.closePath(); ctx.fill(); ctx.stroke();
                 }
 
                 // -------------------------------------------------------------
-                // 7. DRAGÓN TÓXICO (WYVERN VENENOSO)
+                // 7. WYVERN DRAGÓN TÓXICO (VUELO IMPREDECIBLE Y AGUIJÓN)
                 // -------------------------------------------------------------
                 else if (e.type === 'boss_toxic') {
                     ctx.fillStyle = '#3F6212';
                     ctx.strokeStyle = '#84CC16';
                     ctx.lineWidth = 3;
 
-                    // ALAS DE WYVERN ALTEANDO EN ZIG-ZAG
-                    const wingFlop = Math.sin(e.animTick * 6) * 16;
+                    // ALAS DE WYVERN DE MEMBRANA TÓXICA
+                    const wingFlop = Math.sin(e.animTick * 6) * 18;
                     [-1, 1].forEach(side => {
-                        ctx.beginPath(); ctx.moveTo(-15, side * 15); ctx.lineTo(65, side * (100 + wingFlop)); ctx.lineTo(-50, side * (80 + wingFlop)); ctx.closePath(); ctx.fill(); ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(-15, side * 15); ctx.lineTo(75, side * (115 + wingFlop)); ctx.lineTo(-60, side * (95 + wingFlop)); ctx.closePath(); ctx.fill(); ctx.stroke();
                     });
 
-                    // CUERPO Y CABEZA TÓXICA
-                    ctx.beginPath(); ctx.moveTo(-80, -20); ctx.lineTo(20, -25); ctx.lineTo(55, 0); ctx.lineTo(20, 25); ctx.lineTo(-80, 20); ctx.closePath(); ctx.fill(); ctx.stroke();
+                    // COLA DE AGUIJÓN VENENOSO
+                    ctx.beginPath(); ctx.moveTo(-80, 0); ctx.lineTo(-140, 0); ctx.lineTo(-160, -15); ctx.stroke();
 
-                    // HOCICO ÁCIDO
+                    // CUERPO Y CABEZA TÓXICA
+                    ctx.beginPath(); ctx.moveTo(-90, -22); ctx.lineTo(25, -28); ctx.lineTo(65, 0); ctx.lineTo(25, 28); ctx.lineTo(-90, 22); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+                    // HOCICO ÁCIDO CON COLMILLOS
                     ctx.fillStyle = '#65A30D';
-                    ctx.beginPath(); ctx.moveTo(40, -22); ctx.lineTo(85, 0); ctx.lineTo(40, 22); ctx.closePath(); ctx.fill(); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(45, -25); ctx.lineTo(95, 0); ctx.lineTo(45, 25); ctx.closePath(); ctx.fill(); ctx.stroke();
                 }
 
                 // -------------------------------------------------------------
-                // 8. TITÁN SOLAR (MECHA DRAGÓN COLOSAL)
+                // 8. TITÁN DRAGÓN MECHA SOLAR (CIBERNÉTICO COLOSAL)
                 // -------------------------------------------------------------
                 else if (e.type === 'boss_solar') {
                     ctx.fillStyle = '#1D4ED8';
                     ctx.strokeStyle = '#F43F5E';
                     ctx.lineWidth = 4;
 
-                    // ALAS SOLARES DE TITÁN MECHA
+                    // ALAS SOLARES FOTÓNICAS
                     [-1, 1].forEach(side => {
                         ctx.fillStyle = '#BE185D';
-                        ctx.beginPath(); ctx.moveTo(-20, side * 30); ctx.lineTo(40, side * 115); ctx.lineTo(-60, side * 95); ctx.closePath(); ctx.fill(); ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(-20, side * 30); ctx.lineTo(50, side * 135); ctx.lineTo(-70, side * 110); ctx.closePath(); ctx.fill(); ctx.stroke();
                     });
 
-                    // HOMBRERAS Y PECHO MECHA
+                    // PECHO NÚCLEO COLOSAL
                     ctx.fillStyle = '#1D4ED8';
-                    ctx.fillRect(-50, -85, 75, 38); ctx.strokeRect(-50, -85, 75, 38);
-                    ctx.fillRect(-50, 47, 75, 38); ctx.strokeRect(-50, 47, 75, 38);
+                    ctx.fillRect(-60, -95, 85, 42); ctx.strokeRect(-60, -95, 85, 42);
+                    ctx.fillRect(-60, 53, 85, 42); ctx.strokeRect(-60, 53, 85, 42);
 
                     // NÚCLEO SOLAR INTENSO
                     ctx.fillStyle = '#F59E0B';
-                    ctx.beginPath(); ctx.arc(-5, 0, 22, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                    ctx.beginPath(); ctx.arc(-5, 0, 25, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
 
-                    // CASCO ROBÓTICO DE TITÁN
+                    // CASCO Y CABEZA DE MECHA DRAGÓN
                     ctx.fillStyle = '#1E40AF';
-                    ctx.fillRect(45, -28, 50, 56); ctx.strokeRect(45, -28, 50, 56);
+                    ctx.fillRect(50, -32, 55, 64); ctx.strokeRect(50, -32, 55, 64);
 
-                    // VISOR DE ENERGÍA
+                    // VISOR DE ENERGÍA FOTÓNICA
                     ctx.fillStyle = '#FEF08A';
-                    ctx.fillRect(72, -15, 20, 30);
+                    ctx.fillRect(80, -18, 22, 36);
                 }
 
                 ctx.restore();
