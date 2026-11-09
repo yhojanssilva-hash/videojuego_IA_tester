@@ -2,85 +2,167 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BlockNite 2D - Super Shenron & 7 Dragon Balls Edition</title>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>BlockNite 2D - Super Shenron Multijugador</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Rajdhani:wght@500;600;700&display=swap">
     <style>
+        :root {
+            --bg: #060912;
+            --panel: rgba(10,15,30,.78);
+            --line: rgba(120,170,255,.18);
+            --cyan: #3be3ff;
+            --gold: #ffc24a;
+            --red: #ff4d6a;
+            --green: #35f2a0;
+            --violet: #b07bff;
+            --text: #e8f0ff;
+            --mute: #8da0c4;
+            --disp: 'Chakra Petch', 'Segoe UI', sans-serif;
+            --body: 'Rajdhani', 'Segoe UI', sans-serif;
+        }
+
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        body { background-color: #05070f; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        #game-container { position: relative; width: 100vw; height: 100vh; }
-        canvas { display: block; background-color: #080c14; cursor: crosshair; }
-        .hud-panel { position: absolute; padding: 12px 20px; background: rgba(11, 15, 25, 0.9); border: 2px solid #1e293b; border-radius: 12px; backdrop-filter: blur(6px); box-shadow: 0 4px 25px rgba(0,0,0,0.7); pointer-events: none; }
-        #top-left-hud { top: 20px; left: 20px; display: flex; flex-direction: column; gap: 6px; min-width: 270px; }
-        #highscore-hud { top: 20px; left: 50%; transform: translateX(-50%); text-align: center; min-width: 200px; }
+        html, body { height: 100%; width: 100%; overflow: hidden; background: #050914; color: #edf5ff; font-family: var(--body); }
+
+        #game-container { position: relative; width: 100vw; height: 100vh; isolation: isolate; }
+        canvas { display: block; background: var(--bg); cursor: crosshair; }
+
+        .hud-panel {
+            position: absolute;
+            padding: 12px 16px;
+            background: linear-gradient(145deg, rgba(11,20,42,.88), rgba(5,10,24,.82));
+            border: 1px solid rgba(102,190,255,.28);
+            border-radius: 12px;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 12px 38px rgba(0,0,0,.42), inset 0 1px rgba(255,255,255,.06);
+            pointer-events: none;
+        }
+
+        #top-left-hud { top: 16px; left: 16px; display: flex; flex-direction: column; gap: 5px; width: 270px; border-left: 3px solid var(--cyan); }
+        #top-right-hud { top: 16px; right: 16px; text-align: right; border-right: 3px solid var(--red); }
+        #highscore-hud { top: 16px; left: 50%; transform: translateX(-50%); text-align: center; min-width: 170px; padding: 6px 14px; }
         
-        #boss-tester-hud {
-            position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 4px; background: rgba(15, 23, 42, 0.95);
-            border: 2px solid #f59e0b; padding: 8px; border-radius: 10px; z-index: 8;
-        }
-        .tester-btn {
-            background: #1e293b; border: 1px solid #334155; color: #f8fafc;
-            padding: 4px 8px; font-size: 10px; font-weight: bold; border-radius: 6px; cursor: pointer;
-        }
-        .tester-btn:hover { background: #f59e0b; color: #0f172a; }
+        .hud-title { font-family: var(--disp); font-size: 19px; font-weight: 700; color: var(--cyan); letter-spacing: 2.5px; text-shadow: 0 0 18px rgba(59,227,255,.3); }
+        #wave-text { font-size: 22px; color: var(--red) !important; text-shadow: 0 0 14px rgba(255,77,106,.6); }
+
+        .stat-label { font-size: 13px; font-weight: 700; display: flex; justify-content: space-between; letter-spacing: .4px; }
+        .bar-container { width: 100%; height: 10px; background: rgba(255,255,255,.08); border-radius: 20px; overflow: hidden; border: 1px solid var(--line); }
+        .bar-fill { height: 100%; border-radius: 20px; transition: width .12s linear; box-shadow: 0 0 10px currentColor; }
+        
+        #shield-fill { background: linear-gradient(90deg,#17a8d6,var(--cyan)); color: var(--cyan); }
+        #health-fill { background: linear-gradient(90deg,#c9223f,#ff6b86); color: var(--red); }
+        #frenzy-fill { background: linear-gradient(90deg,#e08a00,var(--gold)); color: var(--gold); }
+        #shockwave-fill { background: linear-gradient(90deg,#12b87a,var(--green)); color: var(--green); }
 
         #world-event-widget {
-            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.95); border: 2px solid #f59e0b;
-            padding: 8px 18px; border-radius: 20px; font-size: 12px; font-weight: bold;
-            color: #f59e0b; display: flex; align-items: center; gap: 10px; z-index: 7;
-            box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+            position: absolute; top: 105px; left: 50%; transform: translateX(-50%);
+            background: rgba(10,16,34,.86); backdrop-filter: blur(14px);
+            border: 1px solid rgba(255,194,74,.45); padding: 8px 22px; border-radius: 30px;
+            font-family: var(--disp); font-size: 13px; color: var(--gold);
+            display: flex; align-items: center; gap: 10px; z-index: 7;
         }
+
+        #weapon-selector {
+            position: absolute; bottom: 112px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; max-width: 760px; z-index: 9;
+            padding: 9px; background: rgba(5,10,24,.82); border: 1px solid rgba(59,227,255,.22);
+            border-radius: 14px; backdrop-filter: blur(14px); transition: opacity .2s, transform .2s;
+        }
+        #weapon-selector.arsenal-hidden { opacity: 0; pointer-events: none; transform: translate(-50%, 12px); }
+
+        #arsenal-toggle {
+            position: absolute; z-index: 10; bottom: 102px; left: 50%; transform: translateX(-50%);
+            border: 1px solid rgba(59,227,255,.4); border-radius: 30px; padding: 8px 18px;
+            background: rgba(8,16,35,.92); color: #9ceeff; font: 700 12px var(--disp); letter-spacing: 1.5px;
+            cursor: pointer; box-shadow: 0 5px 22px rgba(0,0,0,.35);
+        }
+        #arsenal-toggle:hover { background: rgba(59,227,255,.18); color: #fff; }
+
+        .weapon-btn {
+            padding: 8px 12px; background: rgba(255,255,255,.045); border: 1px solid var(--line);
+            border-radius: 9px; color: var(--mute); font: 600 12px var(--body); cursor: pointer; transition: all .15s;
+        }
+        .weapon-btn:hover:not(.locked) { color: var(--text); transform: translateY(-2px); }
+        .weapon-btn.active { border-color: var(--cyan); color: var(--cyan); background: rgba(59,227,255,.17); box-shadow: 0 0 18px rgba(59,227,255,.18); }
+        .weapon-btn.locked { opacity: .35; cursor: not-allowed; }
+
+        #bottom-hud { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 9px; align-items: center; }
+        .skill-box {
+            position: relative !important; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            width: 72px; height: 72px; padding: 6px; overflow: hidden; border-radius: 13px !important;
+            background: rgba(8,15,32,.88) !important; border-color: var(--cyan) !important; box-shadow: 0 8px 24px rgba(0,0,0,.32);
+        }
+        .skill-key { font-family: var(--disp); font-size: 11px; font-weight: 700; color: var(--cyan); }
+        .skill-name { font-size: 10px; font-weight: 700; color: var(--text); text-align: center; margin-top: 3px; line-height: 1.1; }
+        .skill-overlay { position: absolute; bottom: 0; left: 0; width: 100%; height: 0%; background: rgba(0,0,0,.72); transition: height .1s linear; }
+
+        #frenzy-banner, #powerup-banner {
+            position: absolute; left: 50%; transform: translate(-50%,-50%) scale(0);
+            font-family: var(--disp); font-weight: 700; letter-spacing: 3px; pointer-events: none;
+            transition: transform .3s cubic-bezier(.2,1.4,.4,1); z-index: 5; white-space: nowrap;
+        }
+        #frenzy-banner { top: 24%; font-size: 34px; color: var(--gold); text-shadow: 0 0 24px var(--gold), 0 0 50px var(--red); }
+        #powerup-banner { top: 30%; font-size: 22px; color: var(--cyan); text-shadow: 0 0 16px var(--cyan); }
+        #frenzy-banner.active, #powerup-banner.active { transform: translate(-50%,-50%) scale(1); }
+
+        #shop-modal, #game-over-modal, #rebirth-modal, #multiplayer-lobby {
+            position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 30%,rgba(20,35,80,.9),rgba(4,6,14,.97));
+            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10;
+        }
+        .modal-content {
+            background: linear-gradient(145deg,rgba(12,21,44,.98),rgba(5,10,24,.98)); border: 1px solid rgba(59,227,255,.5);
+            border-radius: 18px; padding: 26px; max-width: 880px; width: 95%; text-align: center;
+            box-shadow: 0 25px 90px rgba(0,0,0,.65), 0 0 45px rgba(59,227,255,.1); max-height: 92vh; overflow-y: auto; scrollbar-width: thin;
+        }
+        .modal-content h2 { font-family: var(--disp); letter-spacing: 2px; }
+
+        .shop-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap: 10px; margin: 14px 0; }
+        .shop-btn, .action-btn {
+            background: rgba(255,255,255,.045); border: 1px solid var(--line); color: var(--text); padding: 11px;
+            border-radius: 11px; cursor: pointer; font: 700 14px var(--body); transition: all .15s;
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+        }
+        .shop-btn:hover:not(:disabled), .action-btn:hover { background: var(--cyan); color: #06101c; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59,227,255,.3); }
+        .shop-btn:hover:not(:disabled) span { color: #06101c !important; }
+        .shop-btn:disabled { opacity: .35; cursor: not-allowed; }
+        
+        .action-btn {
+            width: 100%; margin-top: 12px; background: linear-gradient(90deg,#12b87a,var(--green)); border: none;
+            color: #04150e; font-family: var(--disp); font-size: 16px; letter-spacing: 2px; padding: 14px;
+        }
+
+        #radar-container {
+            position: absolute; bottom: 16px; right: 16px; width: 170px; height: 170px;
+            border: 1px solid var(--cyan); border-radius: 50%; background: radial-gradient(circle,rgba(59,227,255,.1),rgba(6,9,18,.9));
+            overflow: hidden; pointer-events: none; box-shadow: 0 0 30px rgba(59,227,255,.16);
+        }
+        #radar { width: 100%; height: 100%; }
+
+        .tree-card { border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: rgba(255,255,255,.035); display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center; }
+        .desc-text { font-size: 13px; color: var(--mute); line-height: 1.25; font-weight: 500; }
+        .advisor-box { background: rgba(59,227,255,.07); border-left: 3px solid var(--cyan); padding: 10px 12px; font-size: 14px; color: var(--cyan); margin-bottom: 12px; text-align: left; }
 
         #raid-alert-modal {
-            position: absolute; top: 120px; left: 50%; transform: translateX(-50%) scale(0);
-            background: rgba(15, 23, 42, 0.98); border: 2px solid #f59e0b;
-            border-radius: 16px; padding: 18px; text-align: center; width: 340px;
-            box-shadow: 0 0 30px rgba(245, 158, 11, 0.5); z-index: 20;
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: absolute; top: 110px; left: 50%; transform: translateX(-50%) scale(0);
+            background: rgba(10,15,30,.97); border: 1px solid var(--gold); border-radius: 16px; padding: 18px;
+            text-align: center; width: 360px; box-shadow: 0 0 40px rgba(255,194,74,.4); z-index: 20;
+            backdrop-filter: blur(18px); transition: transform .3s cubic-bezier(.2,1.4,.4,1);
         }
         #raid-alert-modal.active { transform: translateX(-50%) scale(1); }
-        .raid-btn { padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 12px; }
-        .raid-accept { background: #f59e0b; color: #0f172a; }
-        .raid-accept:hover { background: #d97706; }
-        .raid-decline { background: #ef4444; color: white; }
-        .raid-decline:hover { background: #dc2626; }
+        .raid-btn { padding: 8px 16px; border-radius: 6px; font: 700 13px var(--disp); cursor: pointer; border: none; }
+        .raid-accept { background: var(--gold); color: #111; }
+        .raid-decline { background: var(--red); color: #fff; }
 
-        #top-right-hud { top: 20px; right: 20px; text-align: right; }
-        #bottom-hud { bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; align-items: center; }
-        .bar-container { width: 100%; height: 14px; background: #1e293b; border-radius: 8px; overflow: hidden; border: 1px solid #334155; }
-        .bar-fill { height: 100%; transition: width 0.1s linear; }
-        #shield-fill { background: linear-gradient(90deg, #0EA5E9, #38BDF8); }
-        #health-fill { background: linear-gradient(90deg, #ef4444, #f87171); }
-        #frenzy-fill { background: linear-gradient(90deg, #f59e0b, #eab308); }
-        #shockwave-fill { background: linear-gradient(90deg, #10B981, #34D399); }
-        .stat-label { font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; }
-        .hud-title { font-size: 18px; font-weight: 800; color: #38bdf8; letter-spacing: 1px; }
-        .skill-box { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 75px; height: 75px; background: rgba(11, 15, 25, 0.95); border: 2px solid #0EA5E9; border-radius: 14px; position: relative; overflow: hidden; }
-        .skill-key { font-size: 11px; font-weight: bold; color: #94a3b8; }
-        .skill-name { font-size: 8px; font-weight: bold; color: #fff; text-align: center; margin-top: 2px; }
-        .skill-overlay { position: absolute; bottom: 0; left: 0; width: 100%; height: 0%; background: rgba(0, 0, 0, 0.75); transition: height 0.1s linear; }
-        #weapon-selector { position: absolute; top: 115px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; max-width: 800px; }
-        .weapon-btn { padding: 6px 10px; background: rgba(15, 23, 42, 0.85); border: 2px solid #334155; border-radius: 8px; color: #94a3b8; font-weight: bold; font-size: 11px; cursor: pointer; }
-        .weapon-btn.active { border-color: #38bdf8; color: #38bdf8; background: rgba(14, 165, 233, 0.2); }
-        .weapon-btn.locked { opacity: 0.4; cursor: not-allowed; border-color: #475569; }
-        #frenzy-banner, #powerup-banner { position: absolute; left: 50%; transform: translate(-50%, -50%) scale(0); font-weight: 900; letter-spacing: 2px; pointer-events: none; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 5; }
-        #frenzy-banner { top: 25%; font-size: 38px; color: #facc15; text-shadow: 0 0 20px #eab308, 0 0 40px #ef4444; }
-        #powerup-banner { top: 31%; font-size: 28px; color: #38bdf8; text-shadow: 0 0 15px #38bdf8; }
-        #frenzy-banner.active, #powerup-banner.active { transform: translate(-50%, -50%) scale(1); }
-        #shop-modal, #game-over-modal, #rebirth-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 7, 15, 0.94); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; }
-        .modal-content { background: #0f172a; border: 2px solid #0EA5E9; padding: 25px; border-radius: 16px; max-width: 850px; width: 95%; text-align: center; box-shadow: 0 0 40px rgba(14, 165, 233, 0.3); max-height: 90vh; overflow-y: auto; }
-        .shop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 15px 0; }
-        .shop-btn, .action-btn { background: #1e293b; border: 1px solid #334155; color: white; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-        .shop-btn:hover:not(:disabled), .action-btn:hover { background: #0EA5E9; color: #0f172a; border-color: #38bdf8; transform: translateY(-2px); }
-        .shop-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-        .action-btn { width: 100%; margin-top: 10px; background: #10B981; border-color: #10B981; font-size: 16px; }
-        #radar-container { position: absolute; bottom: 20px; right: 20px; width: 170px; height: 170px; border: 2px solid #0EA5E9; border-radius: 50%; background: rgba(11, 15, 25, 0.9); overflow: hidden; pointer-events: none; }
-        #radar { width: 100%; height: 100%; }
-        .tree-card { border: 2px solid #334155; border-radius: 12px; padding: 12px; background: rgba(15, 23, 42, 0.6); display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center; }
-        .desc-text { font-size: 11px; color: #94a3b8; line-height: 1.3; }
-        .advisor-box { background: rgba(14, 165, 233, 0.1); border: 1px solid #0EA5E9; padding: 10px; border-radius: 8px; font-size: 12px; color: #38bdf8; margin-bottom: 12px; text-align: left; }
+        /* Estilos Lector Multijugador */
+        .mp-input { width: 100%; padding: 12px; margin: 10px 0; background: rgba(0,0,0,.5); border: 1px solid var(--cyan); color: #fff; font-family: var(--disp); border-radius: 8px; text-align: center; font-size: 16px; }
+        #mp-status { font-size: 13px; color: var(--cyan); margin-top: 6px; }
+        #mp-players-list { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 10px 0; }
+        .mp-tag { background: rgba(59,227,255,.2); border: 1px solid var(--cyan); padding: 4px 10px; border-radius: 20px; font-size: 12px; color: var(--cyan); }
+
+        @media(max-width:900px){
+            #radar-container { display:none } #weapon-selector { bottom: 155px; max-width: 95vw; }
+            #arsenal-toggle { bottom: 105px; } #bottom-hud { gap: 4px; } .skill-box { width: 54px; height: 58px; padding: 4px; } .skill-name { font-size: 8px; }
+        }
     </style>
 </head>
 <body>
@@ -90,15 +172,16 @@
 
     <div id="world-event-widget">
         <span>🐉 INCURSIÓN MUNDIAL EN:</span>
-        <span id="raid-timer-display" style="color:#38bdf8; font-size:14px;">05:00</span>
+        <span id="raid-timer-display" style="color:#38bdf8; font-size:14px;">02:30</span>
+        <span id="raid-players-count" style="color:#10B981; margin-left: 8px; display:none;">👥 1</span>
     </div>
 
     <div id="raid-alert-modal">
         <h3 style="color:#f59e0b; font-size:16px; margin-bottom:6px;">🐉 ¡ALERTA DE INCURSIÓN DIVINA!</h3>
-        <p style="font-size:12px; color:#cbd5e1; margin-bottom:12px;">Shenlong ha descendido. ¿Deseas iniciar la batalla que despertará a Super Shenron?</p>
+        <p style="font-size:12px; color:#cbd5e1; margin-bottom:12px;">Shenlong ha descendido. Entra al modo multijugador para luchar en equipo.</p>
         <div style="display:flex; justify-content:center; gap:10px;">
-            <button class="raid-btn raid-accept" onclick="acceptRaid()">¡DESAFIAR A SHENLONG!</button>
-            <button class="raid-btn raid-decline" onclick="declineRaid()">RECHAZAR</button>
+            <button class="raid-btn raid-accept" onclick="openMultiplayerLobby()">¡INCURSIÓN MULTIJUGADOR!</button>
+            <button class="raid-btn raid-decline" onclick="declineRaid()">SOLO</button>
         </div>
     </div>
 
@@ -107,21 +190,8 @@
         <div id="best-score-text" style="font-size: 15px; font-weight: 800; color: #f59e0b;">Oleada Máxima: 1</div>
     </div>
 
-    <div id="boss-tester-hud">
-        <span style="font-size:10px; font-weight:bold; color:#f59e0b; align-self:center; margin-right:4px;">🧪 PROBAR JEFES:</span>
-        <button class="tester-btn" onclick="jumpToBossWave(10)">[F1] Dragón Fuego</button>
-        <button class="tester-btn" onclick="jumpToBossWave(20)">[F2] Leviatán Elec.</button>
-        <button class="tester-btn" onclick="jumpToBossWave(30)">[F3] Dragón Viento</button>
-        <button class="tester-btn" onclick="jumpToBossWave(40)">[F4] Leviatán Abisal</button>
-        <button class="tester-btn" onclick="jumpToBossWave(50)">[F5] Leviatán Cósmico</button>
-        <button class="tester-btn" onclick="jumpToBossWave(60)">[F6] Titán Geodude</button>
-        <button class="tester-btn" onclick="jumpToBossWave(70)">[F7] Wyvern Tóxico</button>
-        <button class="tester-btn" style="border-color:#dc2626;" onclick="jumpToBossWave(80)">[F8] Omega Shenron (7 Esferas)</button>
-        <button class="tester-btn" style="border-color:#f59e0b;" onclick="triggerShenlongRaidAlert()">[F9] Shenlong -> Super Shenron</button>
-        <button class="tester-btn" style="border-color:#10B981;" onclick="addCheatGold()">[M] +$5k</button>
-    </div>
-
-    <div id="weapon-selector">
+    <button id="arsenal-toggle" type="button" onclick="toggleArsenal()">☷ ARMAMENTO</button>
+    <div id="weapon-selector" class="arsenal-hidden">
         <div id="w-1" class="weapon-btn active" onclick="switchWeapon(1)">[1] Cañón Plasma</div>
         <div id="w-2" class="weapon-btn" onclick="switchWeapon(2)">[2] Escopeta</div>
         <div id="w-3" class="weapon-btn" onclick="switchWeapon(3)">[3] Láser Rápido</div>
@@ -189,6 +259,23 @@
     </div>
 
     <div id="radar-container"><canvas id="radar"></canvas></div>
+
+    <!-- Lobby Multijugador -->
+    <div id="multiplayer-lobby" style="display:none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <h2 style="color:#f59e0b; font-size:24px;">🐉 INCURSIÓN MULTIJUGADOR</h2>
+            <p style="font-size:12px; color:#cbd5e1; margin-top:6px;">Lucha en tiempo real contra Shenlong y Super Shenron junto a otros pilotos.</p>
+            
+            <input type="text" id="room-id-input" class="mp-input" placeholder="Nombre o Código de Sala (Ej: RAID123)" value="RAID-SHENRON">
+            <input type="text" id="player-name-input" class="mp-input" placeholder="Tu Nombre de Piloto" value="PilotoAlfa">
+
+            <div id="mp-players-list"></div>
+            <div id="mp-status">Esperando conexión...</div>
+
+            <button class="action-btn" style="background:#f59e0b; color:#111;" onclick="joinMultiplayerRoom()">CONECTAR Y ENTRAR A SALA</button>
+            <button class="action-btn" style="background:transparent; border:1px solid #64748b; color:#94a3b8; margin-top:6px;" onclick="closeMultiplayerLobby()">CANCELAR</button>
+        </div>
+    </div>
 
     <div id="shop-modal" style="display:none;">
         <div class="modal-content">
@@ -323,7 +410,7 @@
                 </div>
             </div>
 
-            <button class="action-btn" style="background:#f59e0b; border-color:#f59e0b; margin-top:15px;" onclick="confirmRebirthAndStart()">¡RENACER Y EMPORTALECER!</button>
+            <button class="action-btn" style="background:#f59e0b; border-color:#f59e0b; margin-top:15px;" onclick="confirmRebirthAndStart()">¡RENACER Y FORTALECER!</button>
         </div>
     </div>
 
@@ -335,6 +422,154 @@
         </div>
     </div>
 </div>
+
+<!-- Configuración de Firebase Firestore para Sincronizar Incursión Multijugador -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, onSnapshot, collection, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'blocknite-raid-app';
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+        apiKey: "demo-key", authDomain: "demo.firebaseapp.com", projectId: "demo-project"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    window.mpState = {
+        active: false,
+        user: null,
+        roomId: "RAID-SHENRON",
+        playerName: "PilotoAlfa",
+        remotePlayers: {},
+        unsubPlayers: null,
+        unsubBoss: null,
+        lastSync: 0
+    };
+
+    async function initAuth() {
+        try {
+            let userCred;
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                userCred = await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                userCred = await signInAnonymously(auth);
+            }
+            window.mpState.user = userCred.user;
+        } catch(e) {
+            console.log("Firebase Auth modo local/demo:", e);
+        }
+    }
+    initAuth();
+
+    window.joinMultiplayerRoom = async function() {
+        const roomInput = document.getElementById('room-id-input').value.trim() || 'RAID-SHENRON';
+        const nameInput = document.getElementById('player-name-input').value.trim() || 'PilotoAlfa';
+
+        window.mpState.roomId = roomInput;
+        window.mpState.playerName = nameInput;
+        window.mpState.active = true;
+
+        document.getElementById('mp-status').innerText = "Conectado a la Incursión Multijugador...";
+        document.getElementById('multiplayer-lobby').style.display = 'none';
+        document.getElementById('raid-players-count').style.display = 'inline-block';
+
+        // Suscribirse a otros jugadores de la sala
+        const playersCol = collection(db, 'artifacts', appId, 'public', 'data', `raid_${roomInput}_players`);
+        window.mpState.unsubPlayers = onSnapshot(playersCol, (snapshot) => {
+            const list = document.getElementById('mp-players-list');
+            list.innerHTML = '';
+            const currentUids = [];
+
+            snapshot.forEach(docSnap => {
+                const pData = docSnap.data();
+                if (pData.uid !== window.mpState.user?.uid) {
+                    window.mpState.remotePlayers[pData.uid] = pData;
+                }
+                currentUids.push(pData.uid);
+
+                const tag = document.createElement('span');
+                tag.className = 'mp-tag';
+                tag.innerText = `🎮 ${pData.name} (HP: ${Math.ceil(pData.health || 0)})`;
+                list.appendChild(tag);
+            });
+
+            // Eliminar desconectados
+            Object.keys(window.mpState.remotePlayers).forEach(uid => {
+                if (!currentUids.includes(uid)) delete window.mpState.remotePlayers[uid];
+            });
+
+            const count = Object.keys(window.mpState.remotePlayers).length + 1;
+            document.getElementById('raid-players-count').innerText = `👥 ${count}`;
+        }, (err) => console.log("Player Sync Error:", err));
+
+        // Sincronizar Boss / Super Shenron
+        const bossDocRef = doc(db, 'artifacts', appId, 'public', 'data', `raid_${roomInput}_boss`, 'shenlong');
+        window.mpState.unsubBoss = onSnapshot(bossDocRef, (snap) => {
+            if (snap.exists()) {
+                const bData = snap.data();
+                const localBoss = enemies.find(e => e.type.startsWith('boss_'));
+                if (localBoss) {
+                    if (bData.health !== undefined && bData.health < localBoss.health) {
+                        localBoss.health = bData.health;
+                    }
+                    if (bData.isPhase2 && !localBoss.isPhase2) {
+                        localBoss.isPhase2 = true;
+                        localBoss.bossName = "SUPER SHENRON (DRAGÓN DIVINO PLANETARIO)";
+                        localBoss.color = "#FACC15";
+                        localBoss.radius = 240;
+                    }
+                }
+            }
+        }, (err) => console.log("Boss Sync Error:", err));
+
+        // Saltar a la Incursión
+        jumpToBossWave(90);
+    };
+
+    window.syncPlayerToFirestore = async function(pObj) {
+        if (!window.mpState.active || !window.mpState.user) return;
+        const now = Date.now();
+        if (now - window.mpState.lastSync < 100) return; // Limitar envío a 10 fps
+        window.mpState.lastSync = now;
+
+        const uid = window.mpState.user.uid;
+        const pRef = doc(db, 'artifacts', appId, 'public', 'data', `raid_${window.mpState.roomId}_players`, uid);
+
+        try {
+            await setDoc(pRef, {
+                uid: uid,
+                name: window.mpState.playerName,
+                x: pObj.x,
+                y: pObj.y,
+                health: pObj.health,
+                maxHealth: pObj.maxHealth,
+                shield: pObj.shield,
+                class: selectedTankClass || 'Base',
+                subclass: selectedSubclass || '',
+                isSupreme: isSupremeForm,
+                lastUpdate: Date.now()
+            }, { merge: true });
+        } catch(e) {
+            console.log("Error syncing player", e);
+        }
+    };
+
+    window.damageBossMultiplayer = async function(bossObj, damage) {
+        if (!window.mpState.active || !window.mpState.user) return;
+        const bossDocRef = doc(db, 'artifacts', appId, 'public', 'data', `raid_${window.mpState.roomId}_boss`, 'shenlong');
+        try {
+            await setDoc(bossDocRef, {
+                health: bossObj.health - damage,
+                maxHealth: bossObj.maxHealth,
+                isPhase2: bossObj.isPhase2,
+                lastDamagedBy: window.mpState.playerName
+            }, { merge: true });
+        } catch(e) {}
+    };
+</script>
 
 <script>
     const canvas = document.getElementById('gameCanvas');
@@ -362,7 +597,9 @@
 
     let raidTimeLeft = 300; 
 
-    let maxTurretsAllowed = 1; 
+    let maxTurretsAllowed = 1;
+    const MAX_TURRETS = 3;
+    function toggleArsenal() { document.getElementById("weapon-selector").classList.toggle("arsenal-hidden"); } 
 
     let rebirthCount = 0;
     let rebirthSeeds = 0;
@@ -428,13 +665,18 @@
         document.getElementById('raid-alert-modal').classList.add('active');
     }
 
-    function acceptRaid() {
+    function openMultiplayerLobby() {
         document.getElementById('raid-alert-modal').classList.remove('active');
-        jumpToBossWave(90); // Incursión Shenlong -> Super Shenron
+        document.getElementById('multiplayer-lobby').style.display = 'flex';
+    }
+
+    function closeMultiplayerLobby() {
+        document.getElementById('multiplayer-lobby').style.display = 'none';
     }
 
     function declineRaid() {
         document.getElementById('raid-alert-modal').classList.remove('active');
+        jumpToBossWave(90); // Modo solo
     }
 
     window.addEventListener('keydown', e => {
@@ -452,18 +694,6 @@
         if(e.code === 'Digit5') switchWeapon(5);
         if(e.code === 'Digit6') switchWeapon(6);
         if(e.code === 'Digit7') switchWeapon(7);
-
-        if (e.code === 'F1') { e.preventDefault(); jumpToBossWave(10); }
-        if (e.code === 'F2') { e.preventDefault(); jumpToBossWave(20); }
-        if (e.code === 'F3') { e.preventDefault(); jumpToBossWave(30); }
-        if (e.code === 'F4') { e.preventDefault(); jumpToBossWave(40); }
-        if (e.code === 'F5') { e.preventDefault(); jumpToBossWave(50); }
-        if (e.code === 'F6') { e.preventDefault(); jumpToBossWave(60); }
-        if (e.code === 'F7') { e.preventDefault(); jumpToBossWave(70); }
-        if (e.code === 'F8') { e.preventDefault(); jumpToBossWave(80); } // Omega Shenron (Dragón Maligno 7 Esferas)
-        if (e.code === 'F9') { e.preventDefault(); triggerShenlongRaidAlert(); } // Evento 5 Min (Shenlong -> Super Shenron)
-        if (e.code === 'KeyK') { killAllEnemiesCheat(); }
-        if (e.code === 'KeyM') { addCheatGold(); }
     });
     window.addEventListener('keyup', e => keys[e.code] = false);
     window.addEventListener('mousemove', e => { mousePos.x = e.clientX; mousePos.y = e.clientY; });
@@ -486,18 +716,11 @@
         startWave();
     }
 
-    function killAllEnemiesCheat() {
-        for (let i = enemies.length - 1; i >= 0; i--) {
-            enemies[i].health = 0; onEnemyKilled(enemies[i]);
-        }
-    }
-
-    function addCheatGold() { gold += 5000; updateHUD(); if (inShop) openShop(); }
     function triggerScreenShake(duration) { screenShakeTimer = duration; }
 
     function checkHighScore() {
-        let savedScore = localStorage.getItem('blocknite_max_wave') || 1;
-        if (wave > savedScore) { savedScore = wave; localStorage.setItem('blocknite_max_wave', savedScore); }
+        let savedScore = (()=>{try{return localStorage.getItem('blocknite_max_wave')}catch(e){return null}})() || 1;
+        if (wave > savedScore) { savedScore = wave; try{localStorage.setItem('blocknite_max_wave', savedScore)}catch(e){} }
         document.getElementById('best-score-text').innerText = `Oleada Máxima: ${savedScore}`;
     }
 
@@ -520,6 +743,8 @@
 
         const stolenHp = targetBoss.maxHealth * 0.05;
         targetBoss.health -= stolenHp;
+        if (window.damageBossMultiplayer) window.damageBossMultiplayer(targetBoss, stolenHp);
+
         player.health = Math.min(player.maxHealth, player.health + stolenHp * 0.5);
         player.shield = Math.min(player.maxShield, player.shield + stolenHp * 0.5);
 
@@ -545,7 +770,9 @@
                 } else {
                     const pushAngle = Math.atan2(e.y - player.y, e.x - player.x);
                     e.x += Math.cos(pushAngle) * 220; e.y += Math.sin(pushAngle) * 220;
-                    e.health -= 40; if (e.health <= 0) onEnemyKilled(e);
+                    e.health -= 40; 
+                    if (e.type.startsWith('boss_') && window.damageBossMultiplayer) window.damageBossMultiplayer(e, 40);
+                    if (e.health <= 0) onEnemyKilled(e);
                 }
             }
         }
@@ -689,17 +916,17 @@
         else if (type === 'shieldGen') { enemy.color = '#38BDF8'; enemy.speed *= 0.7; enemy.health = baseHpScaling * 1.4; enemy.radius = 22; enemy.goldValue = 18; }
         else if (type === 'tank') { enemy.color = '#10B981'; enemy.speed *= 0.55; enemy.health = baseHpScaling * 2.5; enemy.radius = 27; enemy.goldValue = 25; }
         
-        else if (type === 'boss_fire') { enemy.color = '#EF4444'; enemy.speed = 1.35; enemy.health = baseHpScaling * 55.0; enemy.radius = 135; enemy.goldValue = 600; enemy.bossName = "Dragón Titán de Magma"; }
-        else if (type === 'boss_electric') { enemy.color = '#FACC15'; enemy.speed = 1.55; enemy.health = baseHpScaling * 50.0; enemy.radius = 140; enemy.goldValue = 600; enemy.bossName = "Leviatán Eléctrico Colosal"; }
-        else if (type === 'boss_wind') { enemy.color = '#34D399'; enemy.speed = 1.75; enemy.health = baseHpScaling * 45.0; enemy.radius = 120; enemy.goldValue = 600; enemy.bossName = "Dragón Guadaña del Viento"; }
-        else if (type === 'boss_water') { enemy.color = '#38BDF8'; enemy.speed = 1.3; enemy.health = baseHpScaling * 60.0; enemy.radius = 145; enemy.goldValue = 600; enemy.bossName = "Leviatán Acorazado Abisal"; }
-        else if (type === 'boss_galactic') { enemy.color = '#A855F7'; enemy.speed = 1.45; enemy.health = baseHpScaling * 65.0; enemy.radius = 150; enemy.goldValue = 750; enemy.bossName = "Leviatán Cósmico Galáctico"; }
-        else if (type === 'boss_earth') { enemy.color = '#D97706'; enemy.speed = 1.1; enemy.health = baseHpScaling * 80.0; enemy.radius = 160; enemy.goldValue = 750; enemy.bossName = "Titán Geodude de Roca"; }
-        else if (type === 'boss_toxic') { enemy.color = '#84CC16'; enemy.speed = 1.85; enemy.health = baseHpScaling * 52.0; enemy.radius = 125; enemy.goldValue = 750; enemy.bossName = "Wyvern Dragón Tóxico"; }
-        else if (type === 'boss_omega') { enemy.color = '#DC2626'; enemy.speed = 1.6; enemy.health = baseHpScaling * 110.0; enemy.radius = 150; enemy.goldValue = 1200; enemy.bossName = "Omega Shenron (1ª Esfera Maligna)"; }
-        else if (type === 'boss_shenlong') { enemy.color = '#10B981'; enemy.speed = 1.4; enemy.health = baseHpScaling * 130.0; enemy.radius = 160; enemy.goldValue = 2000; enemy.bossName = "Shenlong Clásico de la Tierra"; }
+        else if (type === 'boss_fire') { enemy.color = '#EF4444'; enemy.speed = 0.85; enemy.health = baseHpScaling * 55.0; enemy.radius = 135; enemy.goldValue = 600; enemy.bossName = "Dragón Titán de Magma"; }
+        else if (type === 'boss_electric') { enemy.color = '#FACC15'; enemy.speed = 1.0; enemy.health = baseHpScaling * 50.0; enemy.radius = 140; enemy.goldValue = 600; enemy.bossName = "Leviatán Eléctrico Colosal"; }
+        else if (type === 'boss_wind') { enemy.color = '#34D399'; enemy.speed = 1.1; enemy.health = baseHpScaling * 45.0; enemy.radius = 120; enemy.goldValue = 600; enemy.bossName = "Dragón Guadaña del Viento"; }
+        else if (type === 'boss_water') { enemy.color = '#38BDF8'; enemy.speed = 0.8; enemy.health = baseHpScaling * 60.0; enemy.radius = 145; enemy.goldValue = 600; enemy.bossName = "Leviatán Acorazado Abisal"; }
+        else if (type === 'boss_galactic') { enemy.color = '#A855F7'; enemy.speed = 0.9; enemy.health = baseHpScaling * 65.0; enemy.radius = 150; enemy.goldValue = 750; enemy.bossName = "Leviatán Cósmico Galáctico"; }
+        else if (type === 'boss_earth') { enemy.color = '#D97706'; enemy.speed = 0.7; enemy.health = baseHpScaling * 80.0; enemy.radius = 160; enemy.goldValue = 750; enemy.bossName = "Titán Geodude de Roca"; }
+        else if (type === 'boss_toxic') { enemy.color = '#84CC16'; enemy.speed = 1.15; enemy.health = baseHpScaling * 52.0; enemy.radius = 125; enemy.goldValue = 750; enemy.bossName = "Wyvern Dragón Tóxico"; }
+        else if (type === 'boss_omega') { enemy.color = '#DC2626'; enemy.speed = 0.95; enemy.health = baseHpScaling * 110.0; enemy.radius = 150; enemy.goldValue = 1200; enemy.bossName = "Omega Shenron (1ª Esfera Maligna)"; }
+        else if (type === 'boss_shenlong') { enemy.color = '#10B981'; enemy.speed = 0.85; enemy.health = baseHpScaling * 130.0; enemy.radius = 160; enemy.goldValue = 2000; enemy.bossName = "Shenlong Clásico de la Tierra"; }
 
-        else if (type.startsWith('minion_')) { enemy.color = '#CBD5E1'; enemy.speed = 4.8; enemy.health = baseHpScaling * 0.3; enemy.radius = 12; enemy.damage = 18; enemy.goldValue = 4; }
+        else if (type.startsWith('minion_')) { enemy.color = '#CBD5E1'; enemy.speed = 3.0; enemy.health = baseHpScaling * 0.3; enemy.radius = 12; enemy.damage = 18; enemy.goldValue = 4; }
 
         enemy.maxHealth = enemy.health;
         enemies.push(enemy);
@@ -746,7 +973,7 @@
         const dmgMult = 1.0 + (rebirthUpgrades.branchesDmg * 0.2);
 
         if(currentWeapon === 1) {
-            const numCañones = player.cannons;
+            const numCañones = Math.min(3, player.cannons);
             const spread = 0.16;
             const startAngle = baseAngle - ((numCañones - 1) * spread) / 2;
             for (let i = 0; i < numCañones; i++) {
@@ -802,7 +1029,10 @@
             }
             if(targets.length > 0) {
                 targets.forEach(e => {
-                    if(!e.isShielded) e.health -= player.damage * dmgMult * 1.5;
+                    if(!e.isShielded) {
+                        e.health -= player.damage * dmgMult * 1.5;
+                        if (e.type.startsWith('boss_') && window.damageBossMultiplayer) window.damageBossMultiplayer(e, player.damage * dmgMult * 1.5);
+                    }
                     for(let i=0; i<5; i++) particles.push(new Particle(e.x, e.y, '#38bdf8'));
                     if (e.health <= 0) onEnemyKilled(e);
                 });
@@ -896,11 +1126,14 @@
     }
 
     function spawnMeteor() {
-        const targetX = player.x + (Math.random() - 0.5) * 600;
-        const targetY = player.y + (Math.random() - 0.5) * 600;
+        const angle = Math.random() * Math.PI * 2;
+        const distance = Math.random() * 300;
+        const targetX = player.x + Math.cos(angle) * distance;
+        const targetY = player.y + Math.sin(angle) * distance;
+        
         meteorWarnings.push({
-            x: targetX, y: targetY, startX: targetX - 450, startY: targetY - 700,
-            radius: 65, timer: 1.5, maxTimer: 1.5
+            x: targetX, y: targetY, startX: targetX - 250, startY: targetY - 400,
+            radius: 40, timer: 1.5, maxTimer: 1.5
         });
     }
 
@@ -987,11 +1220,10 @@
 
     let lastTime = performance.now();
     function update() {
-        if (inShop || gameOver) return;
-
         const now = performance.now();
-        const dt = (now - lastTime) / 1000;
+        const dt = Math.min((now - lastTime) / 1000, 0.1);
         lastTime = now;
+        if (inShop || gameOver) return;
 
         if (iFrameTimer > 0) iFrameTimer -= dt;
         if (screenShakeTimer > 0) screenShakeTimer -= dt;
@@ -1001,6 +1233,16 @@
         updateDrones(dt);
         updateTurrets(dt);
 
+        if (window.syncPlayerToFirestore) {
+            window.syncPlayerToFirestore(player);
+        }
+
+        const hasBossAlive = enemies.some(e => e.type.startsWith('boss_'));
+        const maxParticleLimit = hasBossAlive ? 60 : 150;
+        if (particles.length > maxParticleLimit) {
+            particles.splice(0, particles.length - maxParticleLimit);
+        }
+
         for (let i = activeShockwaves.length - 1; i >= 0; i--) {
             const sw = activeShockwaves[i];
             sw.radius += sw.speed * dt;
@@ -1008,18 +1250,23 @@
         }
 
         const moveSpeed = isFrenzyActive ? player.speed * 1.4 : player.speed;
+        const frameScale = dt * 60;
 
-        if (keys['KeyW'] || keys['ArrowUp']) player.y -= moveSpeed;
-        if (keys['KeyS'] || keys['ArrowDown']) player.y += moveSpeed;
-        if (keys['KeyA'] || keys['ArrowLeft']) player.x -= moveSpeed;
-        if (keys['KeyD'] || keys['ArrowRight']) player.x += moveSpeed;
+        let moveX = 0, moveY = 0;
+        if (keys['KeyW'] || keys['ArrowUp']) moveY--;
+        if (keys['KeyS'] || keys['ArrowDown']) moveY++;
+        if (keys['KeyA'] || keys['ArrowLeft']) moveX--;
+        if (keys['KeyD'] || keys['ArrowRight']) moveX++;
+        const moveLength = Math.hypot(moveX, moveY) || 1;
+        player.x += (moveX / moveLength) * moveSpeed * frameScale;
+        player.y += (moveY / moveLength) * moveSpeed * frameScale;
 
         if (isShooting) shoot();
 
-        const spawnRate = wave >= 8 ? 0.10 : 0.07;
+        const spawnRate = wave >= 8 ? 0.08 : 0.05;
         if (enemiesToSpawn > 0 && Math.random() < spawnRate) { spawnEnemy(); enemiesToSpawn--; }
         if (Math.random() < 0.0015 && powerUps.length < 2) spawnPowerUp();
-        if (Math.random() < 0.004) spawnMeteor();
+        if (Math.random() < 0.0025) spawnMeteor();
 
         for (let index = heavyProjectiles.length - 1; index >= 0; index--) {
             const hp = heavyProjectiles[index];
@@ -1029,10 +1276,11 @@
 
             if (hp.progress >= 1) {
                 triggerScreenShake(0.2);
-                for(let i=0; i<35; i++) particles.push(new Particle(hp.x, hp.y, '#f97316'));
+                for(let i=0; i<20; i++) particles.push(new Particle(hp.x, hp.y, '#f97316'));
                 enemies.forEach((e) => {
                     if (Math.hypot(e.x - hp.x, e.y - hp.y) < 120 && !e.isShielded) {
                         e.health -= hp.damage;
+                        if (e.type.startsWith('boss_') && window.damageBossMultiplayer) window.damageBossMultiplayer(e, hp.damage);
                         if (e.health <= 0) onEnemyKilled(e);
                     }
                 });
@@ -1053,6 +1301,7 @@
                     e.x += Math.cos(angle) * 5; e.y += Math.sin(angle) * 5;
                     if (dist < bh.radius && !e.isShielded) {
                         e.health -= dt * 75;
+                        if (e.type.startsWith('boss_') && window.damageBossMultiplayer) window.damageBossMultiplayer(e, dt * 75);
                         if (e.health <= 0) onEnemyKilled(e);
                     }
                 }
@@ -1060,7 +1309,7 @@
 
             if (bh.duration <= 0) {
                 triggerScreenShake(0.3);
-                for(let i=0; i<40; i++) particles.push(new Particle(bh.x, bh.y, '#a855f7'));
+                for(let i=0; i<25; i++) particles.push(new Particle(bh.x, bh.y, '#a855f7'));
                 blackHoles.splice(index, 1);
             }
         }
@@ -1069,20 +1318,22 @@
             const mw = meteorWarnings[index];
             mw.timer -= dt;
             if (mw.timer < 0.8) {
-                const fallProgress = (0.8 - mw.timer) / 0.8;
+                const rawProgress = Math.min(1, Math.max(0, (0.8 - mw.timer) / 0.8));
+                const fallProgress = rawProgress * rawProgress * (3 - 2 * rawProgress);
                 const currentX = mw.startX + (mw.x - mw.startX) * fallProgress;
                 const currentY = mw.startY + (mw.y - mw.startY) * fallProgress;
                 particles.push(new Particle(currentX, currentY, '#f97316'));
             }
 
             if (mw.timer <= 0) {
-                triggerScreenShake(0.4);
-                for(let i=0; i<50; i++) particles.push(new Particle(mw.x, mw.y, Math.random()<0.5 ? '#ef4444' : '#f59e0b'));
+                triggerScreenShake(0.3);
+                for(let i=0; i<18; i++) particles.push(new Particle(mw.x, mw.y, Math.random()<0.5 ? '#ef4444' : '#f59e0b'));
 
                 if (Math.hypot(player.x - mw.x, player.y - mw.y) < mw.radius && !isFrenzyActive) damagePlayer(40);
                 enemies.forEach((e) => {
                     if (Math.hypot(e.x - mw.x, e.y - mw.y) < mw.radius) {
                         e.health -= 180;
+                        if (e.type.startsWith('boss_') && window.damageBossMultiplayer) window.damageBossMultiplayer(e, 180);
                         if (e.health <= 0) onEnemyKilled(e);
                     }
                 });
@@ -1107,26 +1358,24 @@
                 if (Math.random() < 0.2) particles.push(new Particle(e.x, e.y, '#10B981'));
             }
 
-            // EVOLUCIÓN SHENLONG (VERDE) -> SUPER SHENRON (DORADO GIGANTE) AL 50% HP
             if (e.type === 'boss_shenlong' && !e.isPhase2 && e.health <= e.maxHealth * 0.5) {
                 e.isPhase2 = true;
                 e.bossName = "SUPER SHENRON (DRAGÓN DIVINO PLANETARIO)";
                 e.color = "#FACC15";
-                e.speed *= 1.4;
-                e.radius = 240; // Crece de tamaño masivamente
+                e.speed = Math.min(1.4, e.speed * 1.15);
+                e.radius = 240; 
                 triggerScreenShake(0.7);
-                for(let i=0; i<60; i++) particles.push(new Particle(e.x, e.y, '#f59e0b'));
+                for(let i=0; i<35; i++) particles.push(new Particle(e.x, e.y, '#f59e0b'));
             }
 
-            // OMEGA SHENRON (1 ESFERA -> 7 ESFERAS DEL DRAGÓN MALIGNO)
             if (e.type === 'boss_omega' && !e.isPhase2 && e.health <= e.maxHealth * 0.5) {
                 e.isPhase2 = true;
                 e.bossName = "OMEGA SHENRON (7 ESFERAS DE LA CORRUPCIÓN)";
                 e.color = "#EF4444";
-                e.speed *= 1.5;
+                e.speed *= 1.35;
                 e.radius = 210;
                 triggerScreenShake(0.6);
-                for(let i=0; i<60; i++) particles.push(new Particle(e.x, e.y, '#ef4444'));
+                for(let i=0; i<35; i++) particles.push(new Particle(e.x, e.y, '#ef4444'));
             }
         });
 
@@ -1146,10 +1395,11 @@
             const m = mines[mIndex];
             enemies.forEach(e => {
                 if (Math.hypot(m.x - e.x, m.y - e.y) < m.triggerRadius) {
-                    for(let i=0; i<30; i++) particles.push(new Particle(m.x, m.y, '#ef4444'));
+                    for(let i=0; i<20; i++) particles.push(new Particle(m.x, m.y, '#ef4444'));
                     enemies.forEach((eSub) => {
                         if (Math.hypot(m.x - eSub.x, m.y - eSub.y) < 130 && !eSub.isShielded) {
                             eSub.health -= m.damage;
+                            if (eSub.type.startsWith('boss_') && window.damageBossMultiplayer) window.damageBossMultiplayer(eSub, m.damage);
                             if (eSub.health <= 0) onEnemyKilled(eSub);
                         }
                     });
@@ -1211,31 +1461,31 @@
                     e.animTick = (e.animTick || 0) + dt * 4.0;
 
                     if (e.type === 'boss_fire') {
-                        const rush = Math.sin(e.animTick * 2.2) > 0.4 ? 2.2 : 0.9;
+                        const rush = Math.sin(e.animTick * 2.2) > 0.4 ? 1.8 : 0.8;
                         e.x += Math.cos(angle) * e.speed * rush; e.y += Math.sin(angle) * e.speed * rush;
                     } 
                     else if (e.type === 'boss_electric' || e.type === 'boss_water' || e.type === 'boss_galactic') {
-                        const snakeAngle = angle + Math.sin(e.animTick * 2.8) * 0.65;
-                        e.x += Math.cos(snakeAngle) * e.speed * 1.1; e.y += Math.sin(snakeAngle) * e.speed * 1.1;
+                        const snakeAngle = angle + Math.sin(e.animTick * 2.8) * 0.55;
+                        e.x += Math.cos(snakeAngle) * e.speed * 1.0; e.y += Math.sin(snakeAngle) * e.speed * 1.0;
                     }
                     else if (e.type === 'boss_wind') {
-                        const dash = Math.sin(e.animTick * 4) > 0.3 ? 2.5 : 0.5;
+                        const dash = Math.sin(e.animTick * 4) > 0.3 ? 1.9 : 0.5;
                         e.x += Math.cos(angle) * e.speed * dash; e.y += Math.sin(angle) * e.speed * dash;
                     }
                     else if (e.type === 'boss_earth') {
-                        const charge = Math.sin(e.animTick * 1.5) > 0.5 ? 2.0 : 0.7;
+                        const charge = Math.sin(e.animTick * 1.5) > 0.5 ? 1.6 : 0.6;
                         e.x += Math.cos(angle) * e.speed * charge; e.y += Math.sin(angle) * e.speed * charge;
                     }
                     else if (e.type === 'boss_toxic') {
-                        const zigZag = angle + Math.sin(e.animTick * 5.5) * 0.85;
-                        e.x += Math.cos(zigZag) * e.speed * 1.3; e.y += Math.sin(zigZag) * e.speed * 1.3;
+                        const zigZag = angle + Math.sin(e.animTick * 5.5) * 0.75;
+                        e.x += Math.cos(zigZag) * e.speed * 1.15; e.y += Math.sin(zigZag) * e.speed * 1.15;
                     }
                     else if (e.type === 'boss_omega' || e.type === 'boss_shenlong') {
-                        const celestialSpin = angle + Math.sin(e.animTick * 2) * 0.4;
-                        e.x += Math.cos(celestialSpin) * e.speed * 1.1; e.y += Math.sin(celestialSpin) * e.speed * 1.1;
+                        const celestialSpin = angle + Math.sin(e.animTick * 2) * 0.35;
+                        e.x += Math.cos(celestialSpin) * e.speed * 1.0; e.y += Math.sin(celestialSpin) * e.speed * 1.0;
                     }
 
-                    if (Date.now() - e.lastSpawn > 4500) {
+                    if (Date.now() - e.lastSpawn > 5000) {
                         e.lastSpawn = Date.now();
                         for (let i = 0; i < 2; i++) {
                             spawnEnemy(`minion_${e.type}`, e.x + (Math.random() - 0.5) * 80, e.y + (Math.random() - 0.5) * 80);
@@ -1243,13 +1493,13 @@
                         }
                     }
 
-                    const bossShotCD = e.isPhase2 ? 1100 : 1600;
+                    const bossShotCD = e.isPhase2 ? 1400 : 2000;
                     if (Date.now() - e.lastShot > bossShotCD) {
                         e.lastShot = Date.now();
-                        const bulletCount = e.isPhase2 ? 22 : 12;
+                        const bulletCount = e.isPhase2 ? 12 : 8;
                         for (let i = 0; i < bulletCount; i++) {
                             const bAngle = angle + (Math.PI * 2 / bulletCount) * i;
-                            enemyBullets.push({ x: e.x, y: e.y, dx: Math.cos(bAngle) * 7.5, dy: Math.sin(bAngle) * 7.5, radius: 8, damage: 20 + wave, color: e.color });
+                            enemyBullets.push({ x: e.x, y: e.y, dx: Math.cos(bAngle) * 6.5, dy: Math.sin(bAngle) * 6.5, radius: 7, damage: 20 + wave, color: e.color });
                         }
                     }
                 } else {
@@ -1260,6 +1510,7 @@
             if (distToPlayer < player.radius + e.radius) {
                 if (spikeLevel > 0 && !e.isShielded) {
                     e.health -= spikeDamage * dt * 10;
+                    if (e.type.startsWith('boss_') && window.damageBossMultiplayer) window.damageBossMultiplayer(e, spikeDamage * dt * 10);
                     for (let i = 0; i < 2; i++) particles.push(new Particle(e.x, e.y, '#eab308'));
                 }
 
@@ -1277,6 +1528,7 @@
                 if (Math.hypot(b.x - e.x, b.y - e.y) < e.radius + b.radius) {
                     if (!e.isShielded) {
                         e.health -= b.damage; applyElementalEffect(e);
+                        if (e.type.startsWith('boss_') && window.damageBossMultiplayer) window.damageBossMultiplayer(e, b.damage);
                     }
                     particles.push(new Particle(b.x, b.y, e.isShielded ? '#38bdf8' : e.color));
                     if (!b.piercing) playerBullets.splice(bIndex, 1);
@@ -1287,7 +1539,10 @@
             for (let dbIndex = droneBullets.length - 1; dbIndex >= 0; dbIndex--) {
                 const db = droneBullets[dbIndex];
                 if (Math.hypot(db.x - e.x, db.y - e.y) < e.radius + db.radius) {
-                    if (!e.isShielded) e.health -= db.damage;
+                    if (!e.isShielded) {
+                        e.health -= db.damage;
+                        if (e.type.startsWith('boss_') && window.damageBossMultiplayer) window.damageBossMultiplayer(e, db.damage);
+                    }
                     particles.push(new Particle(db.x, db.y, '#10B981'));
                     droneBullets.splice(dbIndex, 1);
                     if (e.health <= 0) onEnemyKilled(e);
@@ -1297,7 +1552,10 @@
             for (let tbIndex = turretBullets.length - 1; tbIndex >= 0; tbIndex--) {
                 const tb = turretBullets[tbIndex];
                 if (Math.hypot(tb.x - e.x, tb.y - e.y) < e.radius + tb.radius) {
-                    if (!e.isShielded) e.health -= tb.damage;
+                    if (!e.isShielded) {
+                        e.health -= tb.damage;
+                        if (e.type.startsWith('boss_') && window.damageBossMultiplayer) window.damageBossMultiplayer(e, tb.damage);
+                    }
                     particles.push(new Particle(tb.x, tb.y, '#a855f7'));
                     turretBullets.splice(tbIndex, 1);
                     if (e.health <= 0) onEnemyKilled(e);
@@ -1325,9 +1583,9 @@
             e.isPhase2 = true;
             e.health = e.maxHealth * 1.5;
             e.maxHealth = e.health;
-            e.speed *= 1.35;
+            e.speed *= 1.25;
             triggerScreenShake(0.5);
-            for(let i=0; i<40; i++) particles.push(new Particle(e.x, e.y, '#f59e0b'));
+            for(let i=0; i<25; i++) particles.push(new Particle(e.x, e.y, '#f59e0b'));
             return;
         }
 
@@ -1348,7 +1606,7 @@
             if (killsForFrenzy >= getRequiredKills()) triggerFrenzy();
         }
 
-        for(let i=0; i<15; i++) particles.push(new Particle(e.x, e.y, e.color));
+        for(let i=0; i<10; i++) particles.push(new Particle(e.x, e.y, e.color));
         enemies.splice(idx, 1);
         updateHUD();
 
@@ -1390,18 +1648,14 @@
         startWave();
     }
 
-    // DIBUJO DE SHENLONG / SUPER SHENRON & OMEGA SHENRON (1 O 7 ESFERAS MALIGNAS)
     function drawShenlongBoss(e) {
         const isSuper = e.isPhase2;
-        ctx.strokeStyle = isSuper ? '#FEF08A' : '#34D399'; ctx.lineWidth = 4; ctx.fillStyle = isSuper ? '#78350F' : '#064E3B';
+        ctx.strokeStyle = isSuper ? '#FEF08A' : '#34D399'; ctx.lineWidth = 3; ctx.fillStyle = isSuper ? '#78350F' : '#064E3B';
 
         ctx.save();
-        ctx.shadowColor = isSuper ? '#F59E0B' : '#10B981';
-        ctx.shadowBlur = isSuper ? 60 : 35;
 
-        // Alas/Aletas Divinas
         [-1, 1].forEach(side => {
-            const count = isSuper ? 5 : 3;
+            const count = isSuper ? 4 : 3;
             for(let p = 0; p < count; p++) {
                 ctx.fillStyle = isSuper ? '#B45309' : '#047857'; ctx.strokeStyle = isSuper ? '#FEF08A' : '#6EE7B7';
                 ctx.beginPath();
@@ -1412,26 +1666,22 @@
             }
         });
 
-        // Cuerpo Serpentino Divino
         ctx.fillStyle = isSuper ? '#FEF08A' : '#10B981'; ctx.strokeStyle = isSuper ? '#F59E0B' : '#047857';
         ctx.beginPath();
         ctx.moveTo(80, 0); ctx.lineTo(30, -70); ctx.lineTo(-60, -60); ctx.lineTo(-90, 0); ctx.lineTo(-60, 60); ctx.lineTo(30, 70);
         ctx.closePath(); ctx.fill(); ctx.stroke();
 
-        // Núcleo u Orbe Místico
-        ctx.fillStyle = isSuper ? '#EF4444' : '#F59E0B'; ctx.strokeStyle = '#FEF08A'; ctx.lineWidth = 3;
+        ctx.fillStyle = isSuper ? '#EF4444' : '#F59E0B'; ctx.strokeStyle = '#FEF08A'; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.arc(0, 0, 26, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
 
         ctx.fillStyle = '#FEF08A';
         ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fill();
 
-        // Bigotes/Cuernos Legendarios
         ctx.fillStyle = isSuper ? '#F59E0B' : '#D97706'; ctx.strokeStyle = isSuper ? '#FEF08A' : '#FDE047';
         ctx.beginPath(); ctx.moveTo(45, -40); ctx.lineTo(120, -95); ctx.lineTo(75, -30); ctx.closePath(); ctx.fill(); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(45, 40); ctx.lineTo(120, 95); ctx.lineTo(75, 30); ctx.closePath(); ctx.fill(); ctx.stroke();
 
-        // Ojos
-        ctx.fillStyle = isSuper ? '#EF4444' : '#EF4444';
+        ctx.fillStyle = '#EF4444';
         ctx.beginPath(); ctx.arc(55, -20, 8, 0, Math.PI * 2); ctx.fill();
         ctx.beginPath(); ctx.arc(55, 20, 8, 0, Math.PI * 2); ctx.fill();
 
@@ -1440,13 +1690,10 @@
 
     function drawOmegaShenronBoss(e) {
         const is7Balls = e.isPhase2;
-        ctx.strokeStyle = is7Balls ? '#DC2626' : '#991B1B'; ctx.lineWidth = 4; ctx.fillStyle = is7Balls ? '#450A0A' : '#0f172a';
+        ctx.strokeStyle = is7Balls ? '#DC2626' : '#991B1B'; ctx.lineWidth = 3; ctx.fillStyle = is7Balls ? '#450A0A' : '#0f172a';
 
         ctx.save();
-        ctx.shadowColor = is7Balls ? '#EF4444' : '#991B1B';
-        ctx.shadowBlur = is7Balls ? 50 : 25;
 
-        // Picos de Obsidiana en la Espalda
         [-1, 1].forEach(side => {
             for(let p = 0; p < 4; p++) {
                 ctx.fillStyle = is7Balls ? '#7f1d1d' : '#1e293b'; ctx.strokeStyle = '#EF4444';
@@ -1458,13 +1705,11 @@
             }
         });
 
-        // Chasis del Dragón Maligno
         ctx.fillStyle = is7Balls ? '#18181b' : '#27272a'; ctx.strokeStyle = is7Balls ? '#EF4444' : '#71717a';
         ctx.beginPath();
         ctx.moveTo(60, 0); ctx.lineTo(20, -50); ctx.lineTo(-40, -45); ctx.lineTo(-60, 0); ctx.lineTo(-40, 45); ctx.lineTo(20, 50);
         ctx.closePath(); ctx.fill(); ctx.stroke();
 
-        // DIBUJO DE LAS ESFERAS DEL DRAGÓN MALIGNO (1 ESFERA O LAS 7 ESFERAS)
         const ballCount = is7Balls ? 7 : 1;
         const radiusDist = 28;
         for (let b = 0; b < ballCount; b++) {
@@ -1481,7 +1726,6 @@
             ctx.restore();
         }
 
-        // Ojos Rojos del Dragón Corrupto
         ctx.fillStyle = '#EF4444';
         ctx.beginPath(); ctx.arc(42, -15, 6, 0, Math.PI * 2); ctx.fill();
         ctx.beginPath(); ctx.arc(42, 15, 6, 0, Math.PI * 2); ctx.fill();
@@ -1560,22 +1804,96 @@
         ctx.beginPath(); ctx.arc(90, 18, 7, 0, Math.PI * 2); ctx.fill();
     }
 
-    function drawFantasyTank(angle) {
+    function drawBossNamed(e){
+        const T=e.type; if(!T.startsWith('boss_'))return false;
+        const c=ctx,t=e.animTick||0,p2=!!e.isPhase2;
+        const P=(a,f,s,w)=>{c.beginPath();a.forEach((q,i)=>i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]));c.closePath();if(f){c.fillStyle=f;c.fill()}if(s){c.strokeStyle=s;c.lineWidth=w||2;c.stroke()}};
+        const O=(x,y,r,f,s)=>{c.beginPath();c.arc(x,y,r,0,7);if(f){c.fillStyle=f;c.fill()}if(s){c.strokeStyle=s;c.lineWidth=2;c.stroke()}};
+        const L=(a,b,x,y,s,w)=>{c.beginPath();c.moveTo(a,b);c.lineTo(x,y);c.strokeStyle=s;c.lineWidth=w||2;c.stroke()};
+        const Q=(a,b,cx,cy,x,y,s,w)=>{c.beginPath();c.moveTo(a,b);c.quadraticCurveTo(cx,cy,x,y);c.strokeStyle=s;c.lineWidth=w||2;c.stroke()};
+        const eye=(x,y,col)=>{O(x,y,8,col);O(x+2,y,3,'#000')};
+        const S=(n,sp,amp,fr,cb)=>{for(let i=n;i>=1;i--)cb(-i*sp,Math.sin(t*fr+i*.7)*amp,i)};
+        const B=(x,y,r,n)=>{O(x,y,r,'#ff9d1f','#7a2e00');for(let q=0;q<n;q++){n==1?O(x,y,r*.28,'#d00'):O(x+Math.cos(q*6.283/n)*r*.5,y+Math.sin(q*6.283/n)*r*.5,r*.17,'#d00')}O(x-r*.35,y-r*.35,r*.22,'rgba(255,255,255,.6)')};
+        const D=o=>{
+            S(10,30,22,2,(x,y,i)=>{const r=40-i*1.9;O(x,y,r,o.body,o.edge);P([[x-5,y-r],[x,y-r-15],[x+5,y-r]],o.spine);O(x+4,y+r*.4,r*.38,o.belly)});
+            [-1,1].forEach(s=>{c.beginPath();c.moveTo(30,s*36);c.lineTo(8,s*86);c.lineTo(-34,s*112);c.moveTo(8,s*86);c.lineTo(34,s*124);c.strokeStyle=o.horn;c.lineWidth=6;c.stroke();
+            Q(150,s*10,190,s*(44+Math.sin(t*3)*12),240,s*(30+Math.sin(t*3)*16),o.horn,2)});
+            P([[-10,-26],[-50,-34],[-70,0],[-50,34],[-10,26]],o.spine,o.edge,2);
+            P([[0,-46],[80,-40],[140,-20],[168,0],[140,20],[80,40],[0,46]],o.body,o.edge,3);
+            P([[110,-14],[168,-6],[168,6],[110,14]],o.belly);
+            [-1,1].forEach(s=>{eye(72,s*26,o.eye);O(160,s*8,3,'#000')});
+        };
+        c.save();c.scale(e.radius/140,e.radius/140);c.lineJoin='round';
+        switch(T){
+        case 'boss_fire':{const f=Math.sin(t*3)*22;
+            [-1,1].forEach(s=>{P([[-10,s*20],[30,s*(90+f)],[110,s*(155+f)],[75,s*(105+f*.6)],[60,s*(125+f)],[10,s*70],[-40,s*30]],'#7c1d0a','#ff7a1a');L(30,s*(90+f),58,s*55,'#ff7a1a',2);L(110,s*(155+f),42,s*50,'#ff7a1a',2)});
+            P([[-110,0],[-170,-14],[-150,0],[-170,14]],'#2b0d07','#ff5a1f');
+            P([[-110,0],[-60,-44],[20,-50],[70,-22],[70,22],[20,50],[-60,44]],'#2b0d07','#ff5a1f',3);
+            [[-70,-12,-25,6],[-25,6,12,-24],[0,34,34,12],[-55,28,-12,38],[10,-40,40,-18]].forEach(a=>L(a[0],a[1],a[2],a[3],'#ffb02e',2));
+            P([[60,-28],[122,-22],[142,-5],[142,5],[122,22],[60,28]],'#3d1209','#ff5a1f',2);
+            [-1,1].forEach(s=>{P([[78,s*26],[58,s*66],[104,s*28]],'#ffb02e');eye(95,s*13,'#ffe066')});
+            const fl=Math.sin(t*9)*10;P([[142,-9],[215+fl,-30],[258+fl,0],[215+fl,30],[142,9]],'rgba(255,120,20,.85)');P([[142,-4],[195+fl,-11],[222+fl,0],[195+fl,11],[142,4]],'#fff3a0');
+            break}
+        case 'boss_electric':{
+            S(8,32,26,2.2,(x,y,i)=>{const r=44-i*2.6;P([[x-7,y-r],[x,y-r-17],[x+7,y-r]],'#ffd93b');P([[x-7,y+r],[x,y+r+17],[x+7,y+r]],'#ffd93b');O(x,y,r,i%2?'#1b2a52':'#26397a','#ffd93b')});
+            P([[0,-54],[100,-36],[152,0],[100,36],[0,54]],'#1b2a52','#ffd93b',3);
+            [-1,1].forEach(s=>{P([[18,s*52],[-12,s*100],[62,s*46]],'#ffd93b');eye(82,s*22,'#fff8a8')});
+            O(152,0,14+Math.sin(t*10)*4,'#fff8a8','#ffd93b');
+            break}
+        case 'boss_wind':{
+            [-1,1].forEach(s=>{const f=Math.sin(t*3)*14;c.beginPath();c.moveTo(0,s*18);c.quadraticCurveTo(10,s*(125+f),160,s*(160+f));c.quadraticCurveTo(70,s*(95+f),42,s*24);c.closePath();c.fillStyle='#10b981';c.fill();c.strokeStyle='#d1fae5';c.lineWidth=2;c.stroke()});
+            const w=Math.sin(t*3)*20;L(-80,0,-150,w,'#34d399',8);
+            P([[-85,0],[-30,-27],[50,-21],[92,0],[50,21],[-30,27]],'#064e3b','#34d399',2);
+            P([[80,-17],[132,-9],[156,0],[132,9],[80,17]],'#10b981','#a7f3d0',2);
+            [-1,1].forEach(s=>{P([[92,s*15],[48,s*52],[116,s*12]],'#d1fae5','#34d399',2);eye(112,s*8,'#ecfccb')});break}
+        case 'boss_water':{
+            S(7,34,18,1.8,(x,y,i)=>{const r=48-i*2.8;O(x,y,r,'#0b3a5e','#38bdf8');P([[x-r*.4,y-r*.9],[x+r*.4,y-r*.9],[x+r*.3,y+r*.9],[x-r*.3,y+r*.9]],'#134e75','#7dd3fc',2)});
+            P([[-10,-62],[90,-56],[152,-26],[152,26],[90,56],[-10,62]],'#0b3a5e','#38bdf8',3);
+            Q(60,-58,120,-125,178,-88,'#7dd3fc',3);O(178,-88,11,'#e0f2fe','#38bdf8');
+            [-1,1].forEach(s=>eye(100,s*34,'#e0f2fe'));break}
+        case 'boss_galactic':{
+            S(8,32,24,2,(x,y,i)=>{const r=46-i*2.6;O(x,y,r,'#1e0a3c','#c084fc')});
+            c.beginPath();c.ellipse(70,0,110,32,t*.4,0,7);c.strokeStyle='rgba(240,171,252,.6)';c.lineWidth=3;c.stroke();
+            O(70,0,64,'#2a0f55','#c084fc');
+            [-1,1].forEach(s=>{eye(104,s*20,'#fff')});break}
+        case 'boss_earth':{
+            [-1,1].forEach((s,k)=>{const sw=Math.sin(t*2+k*2.5)*16;P([[0,s*45],[80,s*(75+sw)],[112,s*(88+sw)],[112,s*(46+sw)],[80,s*34]],'#6b5b4b','#3b2f25',3);L(40,s*(52+sw/2),70,s*(60+sw),'#3b2f25',2)});
+            P([[-75,-10],[-58,-74],[-5,-96],[58,-74],[90,-32],[90,32],[58,74],[-5,96],[-58,74],[-80,16]],'#8a7765','#3b2f25',4);
+            [-1,1].forEach(s=>{P([[48,s*42],[92,s*30],[92,s*16],[48,s*28]],'#3b2f25');O(70,s*22,9,'#fff','#3b2f25');O(73,s*22,4,'#111')});
+            break}
+        case 'boss_toxic':{
+            const f=Math.sin(t*3)*16;
+            [-1,1].forEach(s=>{P([[20,s*22],[50,s*(100+f)],[130,s*(138+f)],[100,s*(98+f)],[116,s*(66+f)],[70,s*50]],'#3b0a52','#a3e635',2)});
+            for(let i=7;i>=0;i--){const x=-90-i*17,y=Math.sin(t*3+i*.6)*11;O(x,y,15-i*1.1,'#14532d','#84cc16')}
+            P([[-92,0],[-40,-34],[42,-30],[84,0],[42,30],[-40,34]],'#14532d','#84cc16',3);
+            [-1,1].forEach(s=>{P([[80,s*18],[54,s*46],[102,s*16]],'#a3e635');eye(108,s*10,'#f7ff3c')});break}
+        case 'boss_omega':
+            D({body:'#2a0d33',belly:'#5b1a2e',edge:'#f97316',spine:'#7f1d1d',horn:'#ea580c',eye:'#ff2a2a'});
+            if(!p2)B(40,0,22,1);else for(let n=0;n<7;n++){const i=1+n*1.55;B(-i*30,Math.sin(t*2+i*.7)*22,16,n+1)}break;
+        case 'boss_shenlong':
+            if(p2){c.fillStyle='rgba(250,204,21,.08)';c.beginPath();c.arc(40,0,240,0,7);c.fill()}
+            D(p2?{body:'#f5c518',belly:'#fff3a0',edge:'#fff7c2',spine:'#d97706',horn:'#fff7c2',eye:'#ff2a2a'}:{body:'#17a360',belly:'#d9f99d',edge:'#064e3b',spine:'#065f46',horn:'#f5d68a',eye:'#e11d2a'});
+            for(let n=0;n<7;n++){const a=t*1.05+n*Math.PI*2/7;const bx=Math.cos(a)*(p2?205:155),by=Math.sin(a)*(p2?112:88);O(bx,by,p2?12:9,'#ff9f1c','#fff0a6');for(let k=0;k<=n;k++)O(bx+(k-2)*2,by-2,1.2,'#d62828');}
+            break;
+        }
+        c.restore();return true
+    }
+
+    function drawFantasyTank(angle, customClass = null) {
         ctx.save();
         ctx.rotate(angle);
 
         let mainColor = '#0EA5E9';
         let accentColor = '#38BDF8';
-        if (selectedTankClass === 'obsidian') { mainColor = '#ef4444'; accentColor = '#f97316'; }
-        if (selectedTankClass === 'arcane') { mainColor = '#a855f7'; accentColor = '#c084fc'; }
-        if (selectedTankClass === 'devourer') { mainColor = '#10B981'; accentColor = '#34D399'; }
+        const cls = customClass || selectedTankClass;
+
+        if (cls === 'obsidian') { mainColor = '#ef4444'; accentColor = '#f97316'; }
+        if (cls === 'arcane') { mainColor = '#a855f7'; accentColor = '#c084fc'; }
+        if (cls === 'devourer') { mainColor = '#10B981'; accentColor = '#34D399'; }
         if (isSupremeForm) { mainColor = '#FACC15'; accentColor = '#FEF08A'; }
 
         [-1, 1].forEach(side => {
-            ctx.save();
             ctx.fillStyle = accentColor;
-            ctx.shadowColor = accentColor;
-            ctx.shadowBlur = 15;
             ctx.beginPath();
             ctx.moveTo(-15, side * 18);
             ctx.lineTo(-35, side * 38);
@@ -1583,7 +1901,6 @@
             ctx.lineTo(5, side * 22);
             ctx.closePath();
             ctx.fill();
-            ctx.restore();
         });
 
         ctx.fillStyle = '#0f172a';
@@ -1594,7 +1911,7 @@
         ctx.closePath();
         ctx.fill(); ctx.stroke();
 
-        const cCount = player.cannons;
+        const cCount = Math.min(3, player.cannons);
         const spread = 0.22;
         const startA = -((cCount - 1) * spread) / 2;
 
@@ -1609,16 +1926,11 @@
             ctx.strokeRect(5, -4, 28 + (chassisLevel * 2), 8);
 
             ctx.fillStyle = accentColor;
-            ctx.shadowColor = accentColor;
-            ctx.shadowBlur = 10;
             ctx.fillRect(20 + (chassisLevel * 2), -2, 10, 4);
             ctx.restore();
         }
 
-        ctx.save();
         ctx.fillStyle = mainColor;
-        ctx.shadowColor = accentColor;
-        ctx.shadowBlur = 20;
         ctx.beginPath();
         ctx.moveTo(0, -14); ctx.lineTo(14, 0); ctx.lineTo(0, 14); ctx.lineTo(-14, 0);
         ctx.closePath();
@@ -1626,9 +1938,79 @@
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 2;
         ctx.stroke();
-        ctx.restore();
 
         ctx.restore();
+    }
+
+    function drawRemotePlayers(camX, camY) {
+        if (!window.mpState || !window.mpState.active) return;
+        const remotes = window.mpState.remotePlayers;
+
+        Object.keys(remotes).forEach(uid => {
+            const rp = remotes[uid];
+            if (!rp.x || !rp.y) return;
+
+            const rx = rp.x - camX;
+            const ry = rp.y - camY;
+
+            ctx.save();
+            ctx.translate(rx, ry);
+
+            // Nombre sobre el jugador
+            ctx.font = 'bold 12px Chakra Petch';
+            ctx.fillStyle = '#38bdf8';
+            ctx.textAlign = 'center';
+            ctx.fillText(rp.name || 'Aliado', 0, -35);
+
+            // Barra de HP aliada
+            if (rp.health && rp.maxHealth) {
+                const barW = 40;
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(-barW/2, -28, barW, 4);
+                ctx.fillStyle = '#10B981';
+                ctx.fillRect(-barW/2, -28, Math.max(0, (rp.health / rp.maxHealth) * barW), 4);
+            }
+
+            drawFantasyTank(0, rp.class);
+            ctx.restore();
+        });
+    }
+
+    function drawBiome(camX, camY) {
+        const boss = enemies.find(e => e.type.startsWith("boss_"));
+        const type = boss ? boss.type : "normal";
+        const palettes = {
+            boss_fire: ["#35100d", "#10090d", "#ff5b24"], boss_electric: ["#17264b", "#080d20", "#f8d34e"],
+            boss_wind: ["#123d37", "#071a22", "#79f2c4"], boss_water: ["#073c5c", "#041322", "#32c8ef"],
+            boss_galactic: ["#28104c", "#080719", "#c084fc"], boss_earth: ["#51402c", "#17130f", "#d7a86b"],
+            boss_toxic: ["#243d19", "#0a160d", "#a3e635"], boss_omega: ["#3a101d", "#100711", "#fb4d55"],
+            boss_shenlong: ["#103b32", "#07121c", "#f4d35e"]
+        };
+        const pal = palettes[type] || ["#101d3a", "#050914", "#2e9dca"];
+        const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        g.addColorStop(0, pal[0]); g.addColorStop(1, pal[1]); ctx.fillStyle = g; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const drift = (camX * .18) % 260;
+        if (type === "boss_fire") {
+            for (let i=-1;i<canvas.width/260+2;i++) { const x=i*260-drift; ctx.fillStyle="#1b1115"; ctx.beginPath(); ctx.moveTo(x,canvas.height*.63); ctx.lineTo(x+65,canvas.height*.32); ctx.lineTo(x+125,canvas.height*.63); ctx.lineTo(x+190,canvas.height*.42); ctx.lineTo(x+260,canvas.height*.68); ctx.lineTo(x+260,canvas.height); ctx.lineTo(x,canvas.height); ctx.fill(); ctx.fillStyle="#ff602b"; ctx.fillRect(x+83,canvas.height*.57,22,7); }
+        } else if (type === "boss_water") {
+            for(let i=0;i<8;i++){let x=(i*190-drift*1.4+canvas.width+190)%(canvas.width+190)-80;ctx.fillStyle="rgba(40,170,220,.12)";ctx.beginPath();ctx.ellipse(x,canvas.height*.8,90,18+Math.sin(performance.now()/800+i)*5,0,0,Math.PI*2);ctx.fill();}
+        } else if (type === "boss_earth") {
+            for(let i=-1;i<canvas.width/220+2;i++){let x=i*220-drift;ctx.fillStyle="#40372f";ctx.beginPath();ctx.moveTo(x,canvas.height);ctx.lineTo(x+45,canvas.height*.58);ctx.lineTo(x+100,canvas.height*.72);ctx.lineTo(x+160,canvas.height*.48);ctx.lineTo(x+220,canvas.height);ctx.fill();}
+        } else if (type === "boss_wind") {
+            for(let i=0;i<7;i++){const x=((i*230-camX*.25)%(canvas.width+240)+canvas.width+240)%(canvas.width+240)-120;const y=canvas.height*.25+(i%3)*85;ctx.strokeStyle="rgba(190,255,236,.28)";ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(x,y,95,20,0,Math.PI,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.ellipse(x+30,y+7,70,14,0,Math.PI,Math.PI*2);ctx.stroke();}
+        } else if (type === "boss_electric") {
+            for(let i=0;i<9;i++){const x=(i*173+Math.sin(performance.now()/450+i)*35)%canvas.width;ctx.strokeStyle="rgba(255,232,112,.42)";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,0);for(let y=0;y<canvas.height*.72;y+=35)ctx.lineTo(x+Math.sin(y*.04+i)*22,y);ctx.stroke();}
+        } else if (type === "boss_galactic" || type === "boss_shenlong") {
+            for(let i=0;i<4;i++){const x=(i*310-camX*.12+canvas.width*2)%(canvas.width+250)-80;const y=canvas.height*.25+(i%3)*100;ctx.fillStyle=type==="boss_shenlong"?"rgba(255,194,74,.13)":"rgba(192,132,252,.14)";ctx.beginPath();ctx.arc(x,y,35+i*12,0,Math.PI*2);ctx.fill();ctx.strokeStyle=pal[2];ctx.globalAlpha=.38;ctx.beginPath();ctx.ellipse(x,y,65+i*18,15+i*4,-.25,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;}
+        } else if (type === "boss_toxic" || type === "boss_omega") {
+            for(let i=0;i<10;i++){const x=(i*145-drift+canvas.width*2)%(canvas.width+160)-60;const h=65+(i%4)*28;ctx.fillStyle=type==="boss_toxic"?"rgba(110,180,35,.22)":"rgba(180,35,55,.24)";ctx.beginPath();ctx.moveTo(x,canvas.height);ctx.lineTo(x+18,canvas.height-h);ctx.lineTo(x+42,canvas.height-h*.65);ctx.lineTo(x+70,canvas.height);ctx.fill();}
+            ctx.fillStyle=type==="boss_toxic"?"rgba(150,220,60,.08)":"rgba(230,40,65,.08)";ctx.fillRect(0,canvas.height*.65,canvas.width,canvas.height*.35);
+        } else {
+            for(let i=0;i<65;i++){const x=((i*137+Math.sin(i*9)*50-camX*.06)%canvas.width+canvas.width)%canvas.width;const y=(i*83)%canvas.height;ctx.globalAlpha=.25+((i%4)*.12);ctx.fillStyle=pal[2];ctx.fillRect(x,y,2+(i%3),2+(i%3));}ctx.globalAlpha=1;
+        }
+        ctx.globalAlpha=.18; ctx.strokeStyle=pal[2]; ctx.lineWidth=1;
+        for(let y=canvas.height*.68;y<canvas.height;y+=48){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke();}
+        ctx.globalAlpha=1;
     }
 
     function draw() {
@@ -1642,7 +2024,8 @@
         const camX = player.x - canvas.width / 2;
         const camY = player.y - canvas.height / 2;
 
-        ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 1; const gridSize = 100;
+        drawBiome(camX, camY);
+        ctx.strokeStyle = 'rgba(80,140,255,0.12)'; ctx.lineWidth = 1; const gridSize = 100;
         const startX = Math.floor(camX / gridSize) * gridSize;
         const startY = Math.floor(camY / gridSize) * gridSize;
 
@@ -1654,24 +2037,29 @@
         }
 
         activeShockwaves.forEach(sw => {
-            ctx.save(); ctx.strokeStyle = '#10B981'; ctx.lineWidth = 6; ctx.shadowColor = '#34D399'; ctx.shadowBlur = 15;
+            ctx.save(); ctx.strokeStyle = '#10B981'; ctx.lineWidth = 4;
             ctx.beginPath(); ctx.arc(sw.x - camX, sw.y - camY, sw.radius, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
         });
 
         meteorWarnings.forEach(mw => {
-            ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 3;
+            ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 2;
             ctx.beginPath(); ctx.arc(mw.x - camX, mw.y - camY, mw.radius, 0, Math.PI * 2); ctx.stroke();
-            ctx.fillStyle = 'rgba(239, 68, 68, 0.2)'; ctx.fill();
+            ctx.fillStyle = 'rgba(239, 68, 68, 0.15)'; ctx.fill();
 
             if (mw.timer < 0.8) {
-                const fallProgress = (0.8 - mw.timer) / 0.8;
+                const rawProgress = Math.min(1, Math.max(0, (0.8 - mw.timer) / 0.8));
+                const fallProgress = rawProgress * rawProgress * (3 - 2 * rawProgress);
                 const currentX = mw.startX + (mw.x - mw.startX) * fallProgress;
                 const currentY = mw.startY + (mw.y - mw.startY) * fallProgress;
 
-                ctx.save(); ctx.strokeStyle = '#f97316'; ctx.lineWidth = 12;
-                ctx.beginPath(); ctx.moveTo(mw.startX - camX, mw.startY - camY); ctx.lineTo(currentX - camX, currentY - camY); ctx.stroke();
-                ctx.fillStyle = '#ef4444'; ctx.shadowColor = '#f59e0b'; ctx.shadowBlur = 20;
-                ctx.beginPath(); ctx.arc(currentX - camX, currentY - camY, 16, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+                ctx.save();
+                const mx=currentX-camX, my=currentY-camY;
+                ctx.globalAlpha=.35; ctx.strokeStyle='#ffb347'; ctx.lineWidth=18; ctx.lineCap='round';
+                ctx.beginPath(); ctx.moveTo(mx-70,my-110); ctx.lineTo(mx,my); ctx.stroke();
+                ctx.globalAlpha=1; ctx.fillStyle='#ff4b20';
+                ctx.beginPath(); ctx.arc(mx,my,14,0,Math.PI*2); ctx.fill();
+                ctx.fillStyle='#fff2b0'; ctx.beginPath(); ctx.arc(mx-3,my-4,6,0,Math.PI*2); ctx.fill();
+                ctx.restore();
             }
         });
 
@@ -1704,6 +2092,8 @@
             ctx.beginPath(); ctx.arc(hp.x - camX, hp.y - camY - arcHeight, hp.radius, 0, Math.PI * 2); ctx.fill();
         });
 
+        drawRemotePlayers(camX, camY);
+
         if (iFrameTimer <= 0 || Math.floor(Date.now() / 80) % 2 === 0) {
             const mouseCamX = mousePos.x + camX; const mouseCamY = mousePos.y + camY;
             const angle = Math.atan2(mouseCamY - player.y, mouseCamX - player.x);
@@ -1712,8 +2102,8 @@
             ctx.translate(player.x - camX, player.y - camY);
 
             if (isFrenzyActive || isSupremeForm) {
-                const glowColor = isSupremeForm ? '#FACC15' : `hsl(${(Date.now() / 4) % 360}, 100%, 50%)`;
-                ctx.shadowColor = glowColor; ctx.shadowBlur = 35; ctx.strokeStyle = glowColor; ctx.lineWidth = 6;
+                const glowColor = isSupremeForm ? '#FACC15' : '#38BDF8';
+                ctx.strokeStyle = glowColor; ctx.lineWidth = 4;
                 ctx.beginPath(); ctx.arc(0, 0, player.radius + 14, 0, Math.PI * 2); ctx.stroke();
             }
 
@@ -1728,14 +2118,14 @@
                     const dAngle = player.droneOrbitAngle + i * angleStep;
                     const dx = Math.cos(dAngle) * orbitDistance; const dy = Math.sin(dAngle) * orbitDistance;
                     ctx.save(); ctx.translate(dx, dy); ctx.rotate(dAngle + Math.PI / 2);
-                    ctx.fillStyle = '#10B981'; ctx.shadowColor = '#10B981'; ctx.shadowBlur = 8;
+                    ctx.fillStyle = '#10B981';
                     ctx.beginPath(); ctx.moveTo(0, -7); ctx.lineTo(5, 5); ctx.lineTo(-5, 5); ctx.closePath(); ctx.fill(); ctx.restore();
                 }
             }
 
             if (player.shield > 0) {
-                ctx.save(); ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 3; ctx.shadowColor = '#0EA5E9'; ctx.shadowBlur = 12;
-                ctx.beginPath(); ctx.arc(0, 0, player.radius + 8, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+                ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.arc(0, 0, player.radius + 8, 0, Math.PI * 2); ctx.stroke();
             }
 
             drawFantasyTank(angle);
@@ -1743,14 +2133,29 @@
             ctx.restore();
         }
 
-        playerBullets.forEach(b => { ctx.fillStyle = b.color; ctx.beginPath(); ctx.arc(b.x - camX, b.y - camY, b.radius, 0, Math.PI * 2); ctx.fill(); });
-        droneBullets.forEach(db => { ctx.fillStyle = db.color; ctx.beginPath(); ctx.arc(db.x - camX, db.y - camY, db.radius, 0, Math.PI * 2); ctx.fill(); });
-        turretBullets.forEach(tb => { ctx.fillStyle = tb.color; ctx.beginPath(); ctx.arc(tb.x - camX, tb.y - camY, tb.radius, 0, Math.PI * 2); ctx.fill(); });
-        enemyBullets.forEach(eb => { ctx.fillStyle = eb.color; ctx.beginPath(); ctx.arc(eb.x - camX, eb.y - camY, eb.radius, 0, Math.PI * 2); ctx.fill(); });
+        const vpMargin = 100;
+        playerBullets.forEach(b => { 
+            if (b.x < camX - vpMargin || b.x > camX + canvas.width + vpMargin || b.y < camY - vpMargin || b.y > camY + canvas.height + vpMargin) return;
+            ctx.fillStyle = b.color; ctx.beginPath(); ctx.arc(b.x - camX, b.y - camY, b.radius, 0, Math.PI * 2); ctx.fill(); 
+        });
+        droneBullets.forEach(db => { 
+            if (db.x < camX - vpMargin || db.x > camX + canvas.width + vpMargin || db.y < camY - vpMargin || db.y > camY + canvas.height + vpMargin) return;
+            ctx.fillStyle = db.color; ctx.beginPath(); ctx.arc(db.x - camX, db.y - camY, db.radius, 0, Math.PI * 2); ctx.fill(); 
+        });
+        turretBullets.forEach(tb => { 
+            if (tb.x < camX - vpMargin || tb.x > camX + canvas.width + vpMargin || tb.y < camY - vpMargin || tb.y > camY + canvas.height + vpMargin) return;
+            ctx.fillStyle = tb.color; ctx.beginPath(); ctx.arc(tb.x - camX, tb.y - camY, tb.radius, 0, Math.PI * 2); ctx.fill(); 
+        });
+        enemyBullets.forEach(eb => { 
+            if (eb.x < camX - vpMargin || eb.x > camX + canvas.width + vpMargin || eb.y < camY - vpMargin || eb.y > camY + canvas.height + vpMargin) return;
+            ctx.fillStyle = eb.color; ctx.beginPath(); ctx.arc(eb.x - camX, eb.y - camY, eb.radius, 0, Math.PI * 2); ctx.fill(); 
+        });
 
         enemies.forEach(e => {
+            if (e.x < camX - 300 || e.x > camX + canvas.width + 300 || e.y < camY - 300 || e.y > camY + canvas.height + 300) return;
+
             if (e.isShielded) {
-                ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 3;
+                ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2;
                 ctx.beginPath(); ctx.arc(e.x - camX, e.y - camY, e.radius + 6, 0, Math.PI * 2); ctx.stroke();
             }
 
@@ -1768,15 +2173,14 @@
                 ctx.translate(e.x - camX, e.y - camY);
                 const bAngle = Math.atan2(player.y - e.y, player.x - e.x);
                 ctx.rotate(bAngle);
-                ctx.shadowColor = e.color; ctx.shadowBlur = 25;
 
-                if (e.type === 'boss_fire') drawDetailedPolygonalDragon(e, '#450A0A', '#EF4444', '#F97316', '#FEF08A');
+                if (drawBossNamed(e)) {} else if (e.type === 'boss_fire') drawDetailedPolygonalDragon(e, '#450A0A', '#EF4444', '#F97316', '#FEF08A');
                 else if (e.type === 'boss_electric') drawColossalLeviathan(e, '#451A03', '#78350F', '#FACC15', '#FEF08A');
                 else if (e.type === 'boss_wind') drawDetailedPolygonalDragon(e, '#064E3B', '#34D399', '#10B981', '#A7F3D0');
                 else if (e.type === 'boss_water') drawColossalLeviathan(e, '#075985', '#0369A1', '#38BDF8', '#E0F2FE');
                 else if (e.type === 'boss_galactic') drawColossalLeviathan(e, '#3B0764', '#581C87', '#C084FC', '#F3E8FF');
                 else if (e.type === 'boss_earth') {
-                    ctx.fillStyle = '#78350F'; ctx.strokeStyle = '#F59E0B'; ctx.lineWidth = 3.5;
+                    ctx.fillStyle = '#78350F'; ctx.strokeStyle = '#F59E0B'; ctx.lineWidth = 3;
                     const armCount = e.isPhase2 ? 4 : 2;
                     for(let a=0; a<armCount; a++) {
                         ctx.save();
@@ -1850,11 +2254,11 @@
         }
 
         const turretBtn = document.getElementById('btn-turret-upgrade');
-        if (maxTurretsAllowed >= 4) {
+        if (maxTurretsAllowed >= MAX_TURRETS) {
             turretBtn.disabled = true;
             document.getElementById('cost-turretLimit').innerText = "MÁXIMO ALCANZADO";
         } else {
-            document.getElementById('turret-count-label').innerText = `Máx ${maxTurretsAllowed}/4`;
+            document.getElementById('turret-count-label').innerText = `Máx ${maxTurretsAllowed}/${MAX_TURRETS}`;
         }
 
         for (let w = 4; w <= 7; w++) {
@@ -1903,7 +2307,7 @@
                 ]); 
             }
             if(className === 'devourer') { 
-                player.cannons += 1; player.damage += 12; 
+                player.cannons = Math.min(3, player.cannons + 1); player.damage += 12; 
                 renderSubclasses([
                     { name: 'Behemoth Hidra', desc: 'Dispara proyectiles venenosos a los lados.' },
                     { name: 'Cazador Voraz', desc: 'Recupera blindaje por cada baja.' }
@@ -1941,7 +2345,7 @@
     function unlockSupremeForm() {
         if(gold >= 1500 && !isSupremeForm && chassisLevel >= 5) {
             gold -= 1500; isSupremeForm = true;
-            player.cannons += 2; player.damage += 70; player.speed += 1.2;
+            player.cannons = Math.min(3, player.cannons + 2); player.damage += 70; player.speed += 1.2;
             updateHUD(); document.getElementById('shop-gold').innerText = `Créditos: $${gold}`; updateShopButtons();
         }
     }
@@ -1949,7 +2353,7 @@
     function buyUpgrade(type) {
         if (gold >= costs[type]) {
             if (type === 'turretLimit') {
-                if (maxTurretsAllowed >= 4) return;
+                if (maxTurretsAllowed >= MAX_TURRETS) return;
                 gold -= costs[type];
                 maxTurretsAllowed++;
                 costs[type] = Math.floor(costs[type] * 1.6);
@@ -2021,6 +2425,7 @@
     checkHighScore();
     startWave();
     loop();
+    
 </script>
 </body>
 </html>
