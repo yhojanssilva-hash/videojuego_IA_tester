@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BlockNite 2D - Ultra Detailed Dragons & Leviathans</title>
+    <title>BlockNite 2D - Super Shenron & 7 Dragon Balls Edition</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
         body { background-color: #05070f; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
@@ -14,29 +15,37 @@
         #highscore-hud { top: 20px; left: 50%; transform: translateX(-50%); text-align: center; min-width: 200px; }
         
         #boss-tester-hud {
-            position: absolute;
-            top: 70px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 4px;
-            background: rgba(15, 23, 42, 0.95);
-            border: 2px solid #f59e0b;
-            padding: 8px;
-            border-radius: 10px;
-            z-index: 8;
+            position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 4px; background: rgba(15, 23, 42, 0.95);
+            border: 2px solid #f59e0b; padding: 8px; border-radius: 10px; z-index: 8;
         }
         .tester-btn {
-            background: #1e293b;
-            border: 1px solid #334155;
-            color: #f8fafc;
-            padding: 4px 8px;
-            font-size: 10px;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
+            background: #1e293b; border: 1px solid #334155; color: #f8fafc;
+            padding: 4px 8px; font-size: 10px; font-weight: bold; border-radius: 6px; cursor: pointer;
         }
         .tester-btn:hover { background: #f59e0b; color: #0f172a; }
+
+        #world-event-widget {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.95); border: 2px solid #f59e0b;
+            padding: 8px 18px; border-radius: 20px; font-size: 12px; font-weight: bold;
+            color: #f59e0b; display: flex; align-items: center; gap: 10px; z-index: 7;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+        }
+
+        #raid-alert-modal {
+            position: absolute; top: 120px; left: 50%; transform: translateX(-50%) scale(0);
+            background: rgba(15, 23, 42, 0.98); border: 2px solid #f59e0b;
+            border-radius: 16px; padding: 18px; text-align: center; width: 340px;
+            box-shadow: 0 0 30px rgba(245, 158, 11, 0.5); z-index: 20;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #raid-alert-modal.active { transform: translateX(-50%) scale(1); }
+        .raid-btn { padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; font-size: 12px; }
+        .raid-accept { background: #f59e0b; color: #0f172a; }
+        .raid-accept:hover { background: #d97706; }
+        .raid-decline { background: #ef4444; color: white; }
+        .raid-decline:hover { background: #dc2626; }
 
         #top-right-hud { top: 20px; right: 20px; text-align: right; }
         #bottom-hud { bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; align-items: center; }
@@ -60,7 +69,7 @@
         #frenzy-banner { top: 25%; font-size: 38px; color: #facc15; text-shadow: 0 0 20px #eab308, 0 0 40px #ef4444; }
         #powerup-banner { top: 31%; font-size: 28px; color: #38bdf8; text-shadow: 0 0 15px #38bdf8; }
         #frenzy-banner.active, #powerup-banner.active { transform: translate(-50%, -50%) scale(1); }
-        #shop-modal, #game-over-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 7, 15, 0.94); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 10; }
+        #shop-modal, #game-over-modal, #rebirth-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 7, 15, 0.94); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; }
         .modal-content { background: #0f172a; border: 2px solid #0EA5E9; padding: 25px; border-radius: 16px; max-width: 850px; width: 95%; text-align: center; box-shadow: 0 0 40px rgba(14, 165, 233, 0.3); max-height: 90vh; overflow-y: auto; }
         .shop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 15px 0; }
         .shop-btn, .action-btn { background: #1e293b; border: 1px solid #334155; color: white; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 4px; }
@@ -71,13 +80,27 @@
         #radar { width: 100%; height: 100%; }
         .tree-card { border: 2px solid #334155; border-radius: 12px; padding: 12px; background: rgba(15, 23, 42, 0.6); display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center; }
         .desc-text { font-size: 11px; color: #94a3b8; line-height: 1.3; }
-        .effect-tag { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; margin-top: 2px; }
+        .advisor-box { background: rgba(14, 165, 233, 0.1); border: 1px solid #0EA5E9; padding: 10px; border-radius: 8px; font-size: 12px; color: #38bdf8; margin-bottom: 12px; text-align: left; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
     <canvas id="gameCanvas"></canvas>
+
+    <div id="world-event-widget">
+        <span>🐉 INCURSIÓN MUNDIAL EN:</span>
+        <span id="raid-timer-display" style="color:#38bdf8; font-size:14px;">05:00</span>
+    </div>
+
+    <div id="raid-alert-modal">
+        <h3 style="color:#f59e0b; font-size:16px; margin-bottom:6px;">🐉 ¡ALERTA DE INCURSIÓN DIVINA!</h3>
+        <p style="font-size:12px; color:#cbd5e1; margin-bottom:12px;">Shenlong ha descendido. ¿Deseas iniciar la batalla que despertará a Super Shenron?</p>
+        <div style="display:flex; justify-content:center; gap:10px;">
+            <button class="raid-btn raid-accept" onclick="acceptRaid()">¡DESAFIAR A SHENLONG!</button>
+            <button class="raid-btn raid-decline" onclick="declineRaid()">RECHAZAR</button>
+        </div>
+    </div>
 
     <div id="highscore-hud" class="hud-panel">
         <div style="font-size: 11px; color: #94a3b8; font-weight: bold;">MÁXIMO RÉCORD</div>
@@ -86,14 +109,15 @@
 
     <div id="boss-tester-hud">
         <span style="font-size:10px; font-weight:bold; color:#f59e0b; align-self:center; margin-right:4px;">🧪 PROBAR JEFES:</span>
-        <button class="tester-btn" onclick="jumpToBossWave(10)">[F1] Dragón Magma</button>
+        <button class="tester-btn" onclick="jumpToBossWave(10)">[F1] Dragón Fuego</button>
         <button class="tester-btn" onclick="jumpToBossWave(20)">[F2] Leviatán Elec.</button>
         <button class="tester-btn" onclick="jumpToBossWave(30)">[F3] Dragón Viento</button>
-        <button class="tester-btn" onclick="jumpToBossWave(40)">[F4] Leviatán Mar</button>
-        <button class="tester-btn" onclick="jumpToBossWave(50)">[F5] Leviatán Galáctico</button>
-        <button class="tester-btn" onclick="jumpToBossWave(60)">[F6] Titán Roca</button>
+        <button class="tester-btn" onclick="jumpToBossWave(40)">[F4] Leviatán Abisal</button>
+        <button class="tester-btn" onclick="jumpToBossWave(50)">[F5] Leviatán Cósmico</button>
+        <button class="tester-btn" onclick="jumpToBossWave(60)">[F6] Titán Geodude</button>
         <button class="tester-btn" onclick="jumpToBossWave(70)">[F7] Wyvern Tóxico</button>
-        <button class="tester-btn" onclick="jumpToBossWave(80)">[F8] Titán Mecha</button>
+        <button class="tester-btn" style="border-color:#dc2626;" onclick="jumpToBossWave(80)">[F8] Omega Shenron (7 Esferas)</button>
+        <button class="tester-btn" style="border-color:#f59e0b;" onclick="triggerShenlongRaidAlert()">[F9] Shenlong -> Super Shenron</button>
         <button class="tester-btn" style="border-color:#10B981;" onclick="addCheatGold()">[M] +$5k</button>
     </div>
 
@@ -122,6 +146,9 @@
 
         <div class="stat-label" style="margin-top:2px; color:#eab308;"><span>Carga Frenesí</span><span id="frenzy-text">0/15</span></div>
         <div class="bar-container"><div id="frenzy-fill" class="bar-fill" style="width: 0%;"></div></div>
+
+        <div class="stat-label" style="margin-top:2px; color:#ef4444;"><span>Robo de Vida [F]</span><span id="siphon-text">LISTO</span></div>
+        <div class="bar-container"><div id="siphon-fill" class="bar-fill" style="width: 100%; background: #ef4444;"></div></div>
         
         <div class="stat-label" style="margin-top:4px; color:#f59e0b;"><span>Créditos</span><span id="gold-text">$0</span></div>
         <div class="stat-label" style="color:#a855f7;"><span>Chasis</span><span id="evo-text">Mk. I (Reconocimiento)</span></div>
@@ -130,6 +157,7 @@
     <div id="top-right-hud" class="hud-panel">
         <div class="hud-title" style="color:#ef4444;" id="wave-text">Oleada 1</div>
         <div style="font-size: 13px; color:#94a3b8;" id="enemies-text">Enemigos restantes: 0</div>
+        <div style="font-size: 11px; color:#f59e0b; margin-top:2px;" id="rebirth-level-text">Renacimiento: 0</div>
     </div>
 
     <div id="bottom-hud">
@@ -145,7 +173,7 @@
         </div>
         <div class="skill-box hud-panel" style="border-color: #a855f7;">
             <span class="skill-key">TECLA Q</span>
-            <span class="skill-name">TORRETA FIJA</span>
+            <span class="skill-name" id="turret-hud-name">TORRETA (0/1)</span>
             <div id="turret-cd" class="skill-overlay"></div>
         </div>
         <div class="skill-box hud-panel" style="border-color: #10B981;">
@@ -153,15 +181,20 @@
             <span class="skill-name">ONDA EXPANSIVA</span>
             <div id="shockwave-cd" class="skill-overlay"></div>
         </div>
+        <div class="skill-box hud-panel" style="border-color: #ef4444;">
+            <span class="skill-key">TECLA F</span>
+            <span class="skill-name">DRENAJE VAMPÍRICO</span>
+            <div id="siphon-cd" class="skill-overlay"></div>
+        </div>
     </div>
 
     <div id="radar-container"><canvas id="radar"></canvas></div>
 
-    <div id="shop-modal">
+    <div id="shop-modal" style="display:none;">
         <div class="modal-content">
             <h2 style="color:#38bdf8; font-size:24px;">Hangar de Armamento & Defensas</h2>
-            <p style="color:#94a3b8; margin-top:5px;">Evoluciona progresivamente tu tanque y mejora sus defensas</p>
-            <div style="margin-top:10px; font-weight:bold; color:#f59e0b;" id="shop-gold">Créditos: $0</div>
+            <div id="advisor-banner" class="advisor-box"></div>
+            <div style="margin-top:5px; font-weight:bold; color:#f59e0b;" id="shop-gold">Créditos: $0</div>
 
             <div id="chassis-upgrade-section" style="border: 2px solid #38bdf8; padding: 12px; margin-top: 15px; border-radius: 12px; background: rgba(14, 165, 233, 0.05);">
                 <h3 style="color:#38bdf8; font-size:15px;">🛡️ EVOLUCIÓN DE CHASIS BASE</h3>
@@ -184,37 +217,27 @@
             <div id="evolution-tree-section" style="display:none; border: 2px dashed #f59e0b; padding: 15px; margin-top: 15px; border-radius: 12px; background: rgba(245, 158, 11, 0.05);">
                 <h3 style="color:#f59e0b; font-size:16px;">⚔️ ÁRBOL DE EVOLUCIÓN DE CLASE (REQUERIDO MK. III)</h3>
                 <div class="shop-grid" style="grid-template-columns: repeat(3, 1fr);">
-                    
                     <div class="tree-card" style="border-color:#ef4444;">
                         <span style="color:#ef4444; font-weight:bold; font-size:14px;">🌋 OBSIDIANA</span>
                         <span class="desc-text">Blindaje pesado. Disparos aplican fuego continuo.</span>
-                        <span class="effect-tag" style="background:#450a0a; color:#ef4444;">🔥 EFECTO: QUEMADURA</span>
                         <button class="shop-btn" style="border-color:#ef4444; width:100%; margin-top:6px;" onclick="selectClass('obsidian')">
-                            <span>Evolucionar</span>
-                            <span style="color:#f59e0b;">$600</span>
+                            <span>Evolucionar</span><span style="color:#f59e0b;">$600</span>
                         </button>
                     </div>
-
                     <div class="tree-card" style="border-color:#a855f7;">
                         <span style="color:#a855f7; font-weight:bold; font-size:14px;">⚡ ARCANO</span>
-                        <span class="desc-text">Propulsores neón. Descargas eléctricas rebotan entre metas.</span>
-                        <span class="effect-tag" style="background:#3b0764; color:#a855f7;">⚡ EFECTO: RAYO EN CADENA</span>
+                        <span class="desc-text">Propulsores neón. Descargas eléctricas rebotan.</span>
                         <button class="shop-btn" style="border-color:#a855f7; width:100%; margin-top:6px;" onclick="selectClass('arcane')">
-                            <span>Evolucionar</span>
-                            <span style="color:#f59e0b;">$600</span>
+                            <span>Evolucionar</span><span style="color:#f59e0b;">$600</span>
                         </button>
                     </div>
-
                     <div class="tree-card" style="border-color:#10B981;">
                         <span style="color:#10B981; font-weight:bold; font-size:14px;">🐉 DEVORADOR</span>
                         <span class="desc-text">Colmillos robóticos. Aplica veneno ralentizante.</span>
-                        <span class="effect-tag" style="background:#064e3b; color:#10B981;">☣️ EFECTO: VENENO ÁCIDO</span>
                         <button class="shop-btn" style="border-color:#10B981; width:100%; margin-top:6px;" onclick="selectClass('devourer')">
-                            <span>Evolucionar</span>
-                            <span style="color:#f59e0b;">$600</span>
+                            <span>Evolucionar</span><span style="color:#f59e0b;">$600</span>
                         </button>
                     </div>
-
                 </div>
             </div>
 
@@ -236,11 +259,14 @@
             <h3 style="color:#f59e0b; margin-top:15px; font-size:14px; text-align:left;">🔩 MEJORAS BÁSICAS</h3>
             <div class="shop-grid">
                 <button class="shop-btn" onclick="buyUpgrade('damage')"><span>💥 Cañón Principal (+15)</span><span id="cost-damage" style="color:#f59e0b;">$75</span></button>
-                <button class="shop-btn" onclick="buyUpgrade('fireRate')"><span>⚡ Cadencia Principal (-20ms)</span><span id="cost-fireRate" style="color:#f59e0b;">$85</span></button>
+                <button class="shop-btn" onclick="buyUpgrade('fireRate')"><span>⚡ Cadencia (-20ms)</span><span id="cost-fireRate" style="color:#f59e0b;">$85</span></button>
                 <button class="shop-btn" onclick="buyUpgrade('speed')"><span>🏃 Motor (+0.4 Vel)</span><span id="cost-speed" style="color:#f59e0b;">$65</span></button>
                 <button class="shop-btn" onclick="buyUpgrade('heal')"><span>❤️ Reparar (+60 HP)</span><span id="cost-heal" style="color:#f59e0b;">$50</span></button>
                 <button class="shop-btn" onclick="buyUpgrade('maxHp')"><span>🛡️ Blindaje (+40 Max HP)</span><span id="cost-maxHp" style="color:#f59e0b;">$90</span></button>
-                <button class="shop-btn" onclick="buyUpgrade('multishot')"><span>🔱 +1 Torreta Tanque</span><span id="cost-multishot" style="color:#f59e0b;">$250</span></button>
+                <button class="shop-btn" id="btn-turret-upgrade" style="border-color:#a855f7;" onclick="buyUpgrade('turretLimit')">
+                    <span>🔱 Torreta Extra (<span id="turret-count-label">Máx 1/4</span>)</span>
+                    <span id="cost-turretLimit" style="color:#f59e0b;">$250</span>
+                </button>
                 <button class="shop-btn" style="border-color: #10B981;" onclick="buyUpgrade('addDrone')"><span>🛸 Desplegar +1 Drone</span><span id="cost-addDrone" style="color:#f59e0b;">$180</span></button>
                 <button class="shop-btn" style="border-color: #10B981;" onclick="buyUpgrade('globalMagnet')"><span>🧲 Imán Global Infinito</span><span id="cost-globalMagnet" style="color:#f59e0b;">$500</span></button>
             </div>
@@ -257,7 +283,51 @@
         </div>
     </div>
 
-    <div id="game-over-modal">
+    <div id="rebirth-modal" style="display:none;">
+        <div class="modal-content" style="border-color:#f59e0b; max-width:800px;">
+            <h2 style="color:#f59e0b; font-size:26px;">🌳 ÁRBOL DE ASCENSIÓN PERMANENTE (RENACIMIENTO)</h2>
+            <p style="color:#94a3b8; font-size:12px; margin-top:5px;">Mejoras ancestrales que persisten para siempre entre partidas.</p>
+            <div style="font-weight:bold; color:#10B981; margin-top:8px;" id="rebirth-seeds-count">Semillas de Renacimiento: 0</div>
+            
+            <div class="shop-grid" style="grid-template-columns: repeat(2, 1fr); margin-top:15px; text-align:left;">
+                <div class="tree-card" style="border-color:#10B981;">
+                    <span style="color:#10B981; font-weight:bold;">🌱 RAÍCES: Vitalidad Ancestral</span>
+                    <span class="desc-text">+50 HP Base constante al iniciar cada partida.</span>
+                    <button class="shop-btn" style="width:100%; margin-top:6px;" onclick="buyRebirthUpgrade('rootsHp')">
+                        <span>Mejorar (Nivel <span id="lvl-rootsHp">0</span>)</span><span style="color:#10B981;">1 Semilla</span>
+                    </button>
+                </div>
+
+                <div class="tree-card" style="border-color:#38bdf8;">
+                    <span style="color:#38bdf8; font-weight:bold;">🪵 TRONCO: Canalización Vampírica</span>
+                    <span class="desc-text">Reduce el CD de Drenaje Vampírico en 3 segundos.</span>
+                    <button class="shop-btn" style="width:100%; margin-top:6px;" onclick="buyRebirthUpgrade('trunkSiphon')">
+                        <span>Mejorar (Nivel <span id="lvl-trunkSiphon">0</span>)</span><span style="color:#10B981;">1 Semilla</span>
+                    </button>
+                </div>
+
+                <div class="tree-card" style="border-color:#f59e0b;">
+                    <span style="color:#f59e0b; font-weight:bold;">🌿 RAMAS: Multiplicador de Daño</span>
+                    <span class="desc-text">+20% Daño global a todas las armas permanentemente.</span>
+                    <button class="shop-btn" style="width:100%; margin-top:6px;" onclick="buyRebirthUpgrade('branchesDmg')">
+                        <span>Mejorar (Nivel <span id="lvl-branchesDmg">0</span>)</span><span style="color:#10B981;">2 Semillas</span>
+                    </button>
+                </div>
+
+                <div class="tree-card" style="border-color:#a855f7;">
+                    <span style="color:#a855f7; font-weight:bold;">🍃 HOJAS: Dominio Cósmico</span>
+                    <span class="desc-text">Comienzas cada partida con +1 Drone de Apoyo.</span>
+                    <button class="shop-btn" style="width:100%; margin-top:6px;" onclick="buyRebirthUpgrade('leavesDrone')">
+                        <span>Mejorar (Nivel <span id="lvl-leavesDrone">0</span>)</span><span style="color:#10B981;">3 Semillas</span>
+                    </button>
+                </div>
+            </div>
+
+            <button class="action-btn" style="background:#f59e0b; border-color:#f59e0b; margin-top:15px;" onclick="confirmRebirthAndStart()">¡RENACER Y EMPORTALECER!</button>
+        </div>
+    </div>
+
+    <div id="game-over-modal" style="display:none;">
         <div class="modal-content" style="border-color:#ef4444;">
             <h2 style="color:#ef4444; font-size:28px;">¡UNIDAD DESTRUIDA!</h2>
             <p style="margin: 15px 0;" id="final-stats">Oleada alcanzada: 1</p>
@@ -290,77 +360,82 @@
     let inShop = false;
     let gameOver = false;
 
+    let raidTimeLeft = 300; 
+
+    let maxTurretsAllowed = 1; 
+
+    let rebirthCount = 0;
+    let rebirthSeeds = 0;
+    let rebirthUpgrades = { rootsHp: 0, trunkSiphon: 0, branchesDmg: 0, leavesDrone: 0 };
+
+    let iFrameTimer = 0;
+    let siphonCooldown = 15; let siphonTimer = 0; let siphonReady = true;
+
     let currentWeapon = 1;
     let unlockedWeapons = { 1: true, 2: true, 3: true, 4: false, 5: false, 6: false, 7: false };
     let weaponCosts = { 4: 750, 5: 1000, 6: 1400, 7: 2000 };
 
     let hasGlobalMagnet = false;
     let screenShakeTimer = 0;
-
-    let spikeLevel = 0;
-    let spikeDamage = 0;
+    let spikeLevel = 0; let spikeDamage = 0;
 
     let shockwaveKills = 0;
     const SHOCKWAVE_MAX_KILLS = 12;
     let isShockwaveReady = false;
 
-    let chassisLevel = 1;
-    let chassisCost = 200;
-    const chassisNames = [
-        "Mk. I (Reconocimiento)",
-        "Mk. II (Chasis Blindado)",
-        "Mk. III (Vanguardia de Combate)",
-        "Mk. IV (Fortaleza Móvil)",
-        "Mk. V (Titán Alfa)"
-    ];
+    let chassisLevel = 1; let chassisCost = 200;
+    const chassisNames = ["Mk. I (Reconocimiento)", "Mk. II (Chasis Blindado)", "Mk. III (Vanguardia de Combate)", "Mk. IV (Fortaleza Móvil)", "Mk. V (Titán Alfa)"];
 
-    let selectedTankClass = null;
-    let selectedSubclass = null;  
-    let isSupremeForm = false;    
+    let selectedTankClass = null; let selectedSubclass = null; let isSupremeForm = false;    
 
     let killsForFrenzy = 0;
     function getRequiredKills() { return 15 + (wave - 1) * 6; }
-    let isFrenzyActive = false;
-    let frenzyTimer = 0;
-    const FRENZY_DURATION = 6;
+    let isFrenzyActive = false; let frenzyTimer = 0; const FRENZY_DURATION = 6;
 
     let skillCooldown = 7; let skillTimer = 0; let skillReady = true;
     let mineCooldown = 4; let mineTimer = 0; let mineReady = true;
     let turretCooldown = 6; let turretTimer = 0; let turretReady = true;
 
-    let activePowerUp = null;
-    let powerUpTimer = 0;
-    let activeShockwaves = [];
+    let activePowerUp = null; let powerUpTimer = 0; let activeShockwaves = [];
 
-    let costs = {
-        damage: 75, fireRate: 85, speed: 65, heal: 50,
-        maxHp: 90, multishot: 250, addDrone: 180, globalMagnet: 500,
-        spikes: 180
-    };
+    let costs = { damage: 75, fireRate: 85, speed: 65, heal: 50, maxHp: 90, turretLimit: 250, addDrone: 180, globalMagnet: 500, spikes: 180 };
 
     const player = {
-        x: 0, y: 0, radius: 20, color: '#0EA5E9', speed: 3.5,
-        health: 100, maxHealth: 100,
-        shield: 50, maxShield: 50, lastDamageTime: Date.now(),
-        damage: 30, fireRate: 220, lastShot: 0,
-        cannons: 1, evolutionPhase: 1,
-        droneCount: 0, droneDamage: 10, droneFireRate: 750, lastDroneShot: 0, droneOrbitAngle: 0,
-        collectorDroneAngle: 0
+        x: 0, y: 0, radius: 24, color: '#0EA5E9', speed: 4.2,
+        health: 100, maxHealth: 100, shield: 50, maxShield: 50, lastDamageTime: Date.now(),
+        damage: 30, fireRate: 220, lastShot: 0, cannons: 1, evolutionPhase: 1,
+        droneCount: 0, droneDamage: 10, droneFireRate: 750, lastDroneShot: 0, droneOrbitAngle: 0, collectorDroneAngle: 0
     };
 
-    let playerBullets = [];
-    let heavyProjectiles = [];
-    let blackHoles = [];
-    let droneBullets = [];
-    let turretBullets = [];
-    let enemyBullets = [];
-    let enemies = [];
-    let particles = [];
-    let mines = [];
-    let powerUps = [];
-    let turrets = [];
-    let meteorWarnings = [];
-    let droppedCoins = [];
+    let playerBullets = []; let heavyProjectiles = []; let blackHoles = [];
+    let droneBullets = []; let turretBullets = []; let enemyBullets = [];
+    let enemies = []; let particles = []; let mines = []; let powerUps = [];
+    let turrets = []; let meteorWarnings = []; let droppedCoins = [];
+
+    setInterval(() => {
+        if (raidTimeLeft > 0) {
+            raidTimeLeft--;
+            const m = Math.floor(raidTimeLeft / 60).toString().padStart(2, '0');
+            const s = (raidTimeLeft % 60).toString().padStart(2, '0');
+            document.getElementById('raid-timer-display').innerText = `${m}:${s}`;
+        } else {
+            triggerShenlongRaidAlert();
+            raidTimeLeft = 300;
+        }
+    }, 1000);
+
+    function triggerShenlongRaidAlert() {
+        document.getElementById('raid-alert-modal').classList.add('active');
+    }
+
+    function acceptRaid() {
+        document.getElementById('raid-alert-modal').classList.remove('active');
+        jumpToBossWave(90); // Incursión Shenlong -> Super Shenron
+    }
+
+    function declineRaid() {
+        document.getElementById('raid-alert-modal').classList.remove('active');
+    }
 
     window.addEventListener('keydown', e => {
         keys[e.code] = true;
@@ -368,6 +443,8 @@
         if(e.code === 'KeyE' && mineReady && !inShop && !gameOver) dropMine();
         if(e.code === 'KeyQ' && turretReady && !inShop && !gameOver) deployTurret();
         if(e.code === 'KeyR' && isShockwaveReady && !inShop && !gameOver) triggerShockwave();
+        if(e.code === 'KeyF' && siphonReady && !inShop && !gameOver) triggerSiphon();
+
         if(e.code === 'Digit1') switchWeapon(1);
         if(e.code === 'Digit2') switchWeapon(2);
         if(e.code === 'Digit3') switchWeapon(3);
@@ -383,7 +460,8 @@
         if (e.code === 'F5') { e.preventDefault(); jumpToBossWave(50); }
         if (e.code === 'F6') { e.preventDefault(); jumpToBossWave(60); }
         if (e.code === 'F7') { e.preventDefault(); jumpToBossWave(70); }
-        if (e.code === 'F8') { e.preventDefault(); jumpToBossWave(80); }
+        if (e.code === 'F8') { e.preventDefault(); jumpToBossWave(80); } // Omega Shenron (Dragón Maligno 7 Esferas)
+        if (e.code === 'F9') { e.preventDefault(); triggerShenlongRaidAlert(); } // Evento 5 Min (Shenlong -> Super Shenron)
         if (e.code === 'KeyK') { killAllEnemiesCheat(); }
         if (e.code === 'KeyM') { addCheatGold(); }
     });
@@ -392,41 +470,34 @@
     window.addEventListener('mousedown', e => { if(e.button === 0) isShooting = true; });
     window.addEventListener('mouseup', e => { if(e.button === 0) isShooting = false; });
 
+    function applyRebirthPermanentStats() {
+        const bonusHp = rebirthUpgrades.rootsHp * 50;
+        player.maxHealth = 100 + bonusHp;
+        player.health = player.maxHealth;
+        player.droneCount = rebirthUpgrades.leavesDrone;
+        updateHUD();
+    }
+
     function jumpToBossWave(targetWave) {
-        wave = targetWave;
-        enemies = [];
-        enemyBullets = [];
-        enemiesToSpawn = 0;
-        inShop = false;
-        gameOver = false;
+        wave = targetWave; enemies = []; enemyBullets = []; enemiesToSpawn = 0; inShop = false; gameOver = false;
         document.getElementById('shop-modal').style.display = 'none';
         document.getElementById('game-over-modal').style.display = 'none';
-        player.health = player.maxHealth;
-        player.shield = player.maxShield;
+        player.health = player.maxHealth; player.shield = player.maxShield;
         startWave();
     }
 
     function killAllEnemiesCheat() {
         for (let i = enemies.length - 1; i >= 0; i--) {
-            enemies[i].health = 0;
-            onEnemyKilled(enemies[i]);
+            enemies[i].health = 0; onEnemyKilled(enemies[i]);
         }
     }
 
-    function addCheatGold() {
-        gold += 5000;
-        updateHUD();
-        if (inShop) openShop();
-    }
-
+    function addCheatGold() { gold += 5000; updateHUD(); if (inShop) openShop(); }
     function triggerScreenShake(duration) { screenShakeTimer = duration; }
 
     function checkHighScore() {
         let savedScore = localStorage.getItem('blocknite_max_wave') || 1;
-        if (wave > savedScore) {
-            savedScore = wave;
-            localStorage.setItem('blocknite_max_wave', savedScore);
-        }
+        if (wave > savedScore) { savedScore = wave; localStorage.setItem('blocknite_max_wave', savedScore); }
         document.getElementById('best-score-text').innerText = `Oleada Máxima: ${savedScore}`;
     }
 
@@ -437,36 +508,44 @@
         document.getElementById(`w-${w}`).classList.add('active');
     }
 
+    function triggerSiphon() {
+        if (!siphonReady) return;
+        let targetBoss = enemies.find(e => e.type.startsWith('boss_'));
+        if (!targetBoss) return;
+
+        siphonReady = false;
+        const effectiveCD = Math.max(5, siphonCooldown - (rebirthUpgrades.trunkSiphon * 3));
+        siphonTimer = effectiveCD;
+        document.getElementById('siphon-cd').style.height = '100%';
+
+        const stolenHp = targetBoss.maxHealth * 0.05;
+        targetBoss.health -= stolenHp;
+        player.health = Math.min(player.maxHealth, player.health + stolenHp * 0.5);
+        player.shield = Math.min(player.maxShield, player.shield + stolenHp * 0.5);
+
+        for(let i=0; i<25; i++) particles.push(new Particle(targetBoss.x, targetBoss.y, '#ef4444'));
+        triggerScreenShake(0.2);
+        updateHUD();
+        if (targetBoss.health <= 0) onEnemyKilled(targetBoss);
+    }
+
     function triggerShockwave() {
         if (!isShockwaveReady) return;
-        isShockwaveReady = false;
-        shockwaveKills = 0;
+        isShockwaveReady = false; shockwaveKills = 0;
         document.getElementById('shockwave-cd').style.height = '100%';
-
         triggerScreenShake(0.3);
-        activeShockwaves.push({
-            x: player.x,
-            y: player.y,
-            radius: player.radius,
-            maxRadius: 380,
-            speed: 600
-        });
+        activeShockwaves.push({ x: player.x, y: player.y, radius: player.radius, maxRadius: 380, speed: 600 });
 
         for (let index = enemies.length - 1; index >= 0; index--) {
             const e = enemies[index];
             const dist = Math.hypot(e.x - player.x, e.y - player.y);
-            
             if (dist < 380) {
                 if (e.type === 'scout' || e.type === 'kamikaze' || e.type.startsWith('minion_')) {
-                    e.health = 0;
-                    onEnemyKilled(e);
+                    e.health = 0; onEnemyKilled(e);
                 } else {
                     const pushAngle = Math.atan2(e.y - player.y, e.x - player.x);
-                    const pushDist = 220;
-                    e.x += Math.cos(pushAngle) * pushDist;
-                    e.y += Math.sin(pushAngle) * pushDist;
-                    e.health -= 40;
-                    if (e.health <= 0) onEnemyKilled(e);
+                    e.x += Math.cos(pushAngle) * 220; e.y += Math.sin(pushAngle) * 220;
+                    e.health -= 40; if (e.health <= 0) onEnemyKilled(e);
                 }
             }
         }
@@ -493,6 +572,7 @@
     }
 
     function deployTurret() {
+        if (turrets.length >= maxTurretsAllowed) return;
         turretReady = false; turretTimer = turretCooldown;
         turrets.push({ x: player.x, y: player.y, radius: 16, damage: 22 + (wave * 4), fireRate: 250, lastShot: Date.now(), life: 14 });
     }
@@ -512,6 +592,12 @@
             turretTimer -= dt;
             document.getElementById('turret-cd').style.height = `${Math.max(0, (turretTimer / turretCooldown) * 100)}%`;
             if(turretTimer <= 0) { turretReady = true; document.getElementById('turret-cd').style.height = '0%'; }
+        }
+        if(!siphonReady) {
+            siphonTimer -= dt;
+            const effectiveCD = Math.max(5, siphonCooldown - (rebirthUpgrades.trunkSiphon * 3));
+            document.getElementById('siphon-cd').style.height = `${Math.max(0, (siphonTimer / effectiveCD) * 100)}%`;
+            if(siphonTimer <= 0) { siphonReady = true; document.getElementById('siphon-cd').style.height = '0%'; }
         }
     }
 
@@ -582,35 +668,38 @@
             else type = 'tank';
         }
 
-        const baseHpScaling = 35 + (wave * 55);
+        let difficultyFactor = 1.0 + (rebirthCount * 0.45);
+        if (wave >= 8) difficultyFactor += (wave - 7) * 0.08;
+
+        const baseHpScaling = (22 + (wave * 28)) * difficultyFactor;
 
         let enemy = {
             x: x, y: y, type: type,
             health: baseHpScaling, maxHealth: baseHpScaling,
-            speed: 2.3 + (wave * 0.12), damage: 15 + (wave * 3),
-            goldValue: 10, radius: 18, color: '#ef4444',
+            speed: (2.0 + (wave * 0.05)) * (wave >= 8 ? 1.1 : 1.0), 
+            damage: (10 + (wave * 1.5)) * difficultyFactor,
+            goldValue: 10 + Math.floor(wave * 1.2), radius: 18, color: '#ef4444',
             lastShot: Date.now(), lastSpawn: Date.now(), isShielded: false,
-            burnTicks: 0, poisonTicks: 0, animTick: 0
+            burnTicks: 0, poisonTicks: 0, animTick: 0, isPhase2: false
         };
 
-        if (type === 'scout') { enemy.color = '#F97316'; enemy.speed = 4.8; enemy.health = baseHpScaling * 0.45; enemy.radius = 13; enemy.goldValue = 8; }
-        else if (type === 'shooter') { enemy.color = '#A855F7'; enemy.speed = 2.0; enemy.health = baseHpScaling * 0.75; enemy.radius = 19; enemy.goldValue = 12; }
-        else if (type === 'kamikaze') { enemy.color = '#FACC15'; enemy.speed = 5.5; enemy.health = baseHpScaling * 0.35; enemy.radius = 11; enemy.damage = 40; enemy.goldValue = 10; }
-        else if (type === 'shieldGen') { enemy.color = '#38BDF8'; enemy.speed = 1.5; enemy.health = baseHpScaling * 1.4; enemy.radius = 22; enemy.goldValue = 18; }
-        else if (type === 'tank') { enemy.color = '#10B981'; enemy.speed = 1.2; enemy.health = baseHpScaling * 2.5; enemy.radius = 27; enemy.goldValue = 25; }
+        if (type === 'scout') { enemy.color = '#F97316'; enemy.speed *= 1.8; enemy.health = baseHpScaling * 0.45; enemy.radius = 13; enemy.goldValue = 8; }
+        else if (type === 'shooter') { enemy.color = '#A855F7'; enemy.speed *= 0.9; enemy.health = baseHpScaling * 0.75; enemy.radius = 19; enemy.goldValue = 12; }
+        else if (type === 'kamikaze') { enemy.color = '#FACC15'; enemy.speed *= 2.1; enemy.health = baseHpScaling * 0.35; enemy.radius = 11; enemy.damage *= 1.8; enemy.goldValue = 10; }
+        else if (type === 'shieldGen') { enemy.color = '#38BDF8'; enemy.speed *= 0.7; enemy.health = baseHpScaling * 1.4; enemy.radius = 22; enemy.goldValue = 18; }
+        else if (type === 'tank') { enemy.color = '#10B981'; enemy.speed *= 0.55; enemy.health = baseHpScaling * 2.5; enemy.radius = 27; enemy.goldValue = 25; }
         
-        // JEFES ANATÓMICAMENTE DETALLADOS: DRAGONES Y LEVIATANES ROBUSTOS
-        else if (type === 'boss_fire') { enemy.color = '#EF4444'; enemy.speed = 1.1; enemy.health = baseHpScaling * 65.0; enemy.radius = 135; enemy.goldValue = 500; enemy.bossName = "Dragón Titán de Magma"; }
-        else if (type === 'boss_electric') { enemy.color = '#FACC15'; enemy.speed = 1.25; enemy.health = baseHpScaling * 60.0; enemy.radius = 140; enemy.goldValue = 500; enemy.bossName = "Leviatán Eléctrico Colosal"; }
-        else if (type === 'boss_wind') { enemy.color = '#34D399'; enemy.speed = 1.5; enemy.health = baseHpScaling * 52.0; enemy.radius = 120; enemy.goldValue = 500; enemy.bossName = "Dragón Guadaña del Viento"; }
-        else if (type === 'boss_water') { enemy.color = '#38BDF8'; enemy.speed = 0.9; enemy.health = baseHpScaling * 70.0; enemy.radius = 145; enemy.goldValue = 500; enemy.bossName = "Leviatán Acorazado del Mar"; }
-        else if (type === 'boss_galactic') { enemy.color = '#A855F7'; enemy.speed = 1.05; enemy.health = baseHpScaling * 75.0; enemy.radius = 150; enemy.goldValue = 650; enemy.bossName = "Leviatán Cósmico Galáctico"; }
-        else if (type === 'boss_earth') { enemy.color = '#D97706'; enemy.speed = 0.7; enemy.health = baseHpScaling * 90.0; enemy.radius = 160; enemy.goldValue = 650; enemy.bossName = "Titán Escarabajo de Roca"; }
-        else if (type === 'boss_toxic') { enemy.color = '#84CC16'; enemy.speed = 1.6; enemy.health = baseHpScaling * 60.0; enemy.radius = 125; enemy.goldValue = 650; enemy.bossName = "Wyvern Dragón Tóxico"; }
-        else if (type === 'boss_solar') { enemy.color = '#EC4899'; enemy.speed = 0.95; enemy.health = baseHpScaling * 95.0; enemy.radius = 165; enemy.goldValue = 800; enemy.bossName = "Titán Dragón Mecha Solar"; }
+        else if (type === 'boss_fire') { enemy.color = '#EF4444'; enemy.speed = 1.35; enemy.health = baseHpScaling * 55.0; enemy.radius = 135; enemy.goldValue = 600; enemy.bossName = "Dragón Titán de Magma"; }
+        else if (type === 'boss_electric') { enemy.color = '#FACC15'; enemy.speed = 1.55; enemy.health = baseHpScaling * 50.0; enemy.radius = 140; enemy.goldValue = 600; enemy.bossName = "Leviatán Eléctrico Colosal"; }
+        else if (type === 'boss_wind') { enemy.color = '#34D399'; enemy.speed = 1.75; enemy.health = baseHpScaling * 45.0; enemy.radius = 120; enemy.goldValue = 600; enemy.bossName = "Dragón Guadaña del Viento"; }
+        else if (type === 'boss_water') { enemy.color = '#38BDF8'; enemy.speed = 1.3; enemy.health = baseHpScaling * 60.0; enemy.radius = 145; enemy.goldValue = 600; enemy.bossName = "Leviatán Acorazado Abisal"; }
+        else if (type === 'boss_galactic') { enemy.color = '#A855F7'; enemy.speed = 1.45; enemy.health = baseHpScaling * 65.0; enemy.radius = 150; enemy.goldValue = 750; enemy.bossName = "Leviatán Cósmico Galáctico"; }
+        else if (type === 'boss_earth') { enemy.color = '#D97706'; enemy.speed = 1.1; enemy.health = baseHpScaling * 80.0; enemy.radius = 160; enemy.goldValue = 750; enemy.bossName = "Titán Geodude de Roca"; }
+        else if (type === 'boss_toxic') { enemy.color = '#84CC16'; enemy.speed = 1.85; enemy.health = baseHpScaling * 52.0; enemy.radius = 125; enemy.goldValue = 750; enemy.bossName = "Wyvern Dragón Tóxico"; }
+        else if (type === 'boss_omega') { enemy.color = '#DC2626'; enemy.speed = 1.6; enemy.health = baseHpScaling * 110.0; enemy.radius = 150; enemy.goldValue = 1200; enemy.bossName = "Omega Shenron (1ª Esfera Maligna)"; }
+        else if (type === 'boss_shenlong') { enemy.color = '#10B981'; enemy.speed = 1.4; enemy.health = baseHpScaling * 130.0; enemy.radius = 160; enemy.goldValue = 2000; enemy.bossName = "Shenlong Clásico de la Tierra"; }
 
-        // SÚBDITOS
-        else if (type.startsWith('minion_')) { enemy.color = '#CBD5E1'; enemy.speed = 4.5; enemy.health = baseHpScaling * 0.35; enemy.radius = 12; enemy.damage = 18; enemy.goldValue = 4; }
+        else if (type.startsWith('minion_')) { enemy.color = '#CBD5E1'; enemy.speed = 4.8; enemy.health = baseHpScaling * 0.3; enemy.radius = 12; enemy.damage = 18; enemy.goldValue = 4; }
 
         enemy.maxHealth = enemy.health;
         enemies.push(enemy);
@@ -645,7 +734,6 @@
         if(currentWeapon === 7) fireRate = 1400;
 
         const effectiveFireRate = isFrenzyActive ? 50 : fireRate;
-
         if (now - player.lastShot < effectiveFireRate) return;
         player.lastShot = now;
 
@@ -654,6 +742,8 @@
         const targetX = mousePos.x + camX;
         const targetY = mousePos.y + camY;
         const baseAngle = Math.atan2(targetY - player.y, targetX - player.x);
+
+        const dmgMult = 1.0 + (rebirthUpgrades.branchesDmg * 0.2);
 
         if(currentWeapon === 1) {
             const numCañones = player.cannons;
@@ -665,7 +755,7 @@
                     x: player.x, y: player.y,
                     dx: Math.cos(angle) * (isFrenzyActive ? 15 : 11),
                     dy: Math.sin(angle) * (isFrenzyActive ? 15 : 11),
-                    radius: isFrenzyActive ? 6 : 4, damage: player.damage * (isFrenzyActive ? 1.5 : 1),
+                    radius: isFrenzyActive ? 6 : 4, damage: player.damage * dmgMult * (isFrenzyActive ? 1.5 : 1),
                     color: isSupremeForm ? '#FACC15' : (selectedTankClass === 'obsidian' ? '#ef4444' : (selectedTankClass === 'arcane' ? '#a855f7' : '#10B981')),
                     piercing: activePowerUp === 'piercing' || isSupremeForm
                 });
@@ -676,7 +766,7 @@
                 playerBullets.push({
                     x: player.x, y: player.y,
                     dx: Math.cos(angle) * 10, dy: Math.sin(angle) * 10,
-                    radius: 4, damage: player.damage * 0.5,
+                    radius: 4, damage: player.damage * dmgMult * 0.5,
                     color: '#f97316', piercing: false
                 });
             }
@@ -684,7 +774,7 @@
             playerBullets.push({
                 x: player.x, y: player.y,
                 dx: Math.cos(baseAngle) * 18, dy: Math.sin(baseAngle) * 18,
-                radius: 3, damage: player.damage * 0.65,
+                radius: 3, damage: player.damage * dmgMult * 0.65,
                 color: '#a855f7', piercing: true
             });
         } else if(currentWeapon === 4) {
@@ -694,36 +784,32 @@
                 playerBullets.push({
                     x: player.x, y: player.y,
                     dx: Math.cos(flameAngle) * speed, dy: Math.sin(flameAngle) * speed,
-                    radius: 5 + Math.random() * 5, damage: player.damage * 0.35,
+                    radius: 5 + Math.random() * 5, damage: player.damage * dmgMult * 0.35,
                     color: Math.random() < 0.5 ? '#f97316' : '#ef4444', piercing: true, isFlame: true, life: 0.35
                 });
             }
         } else if(currentWeapon === 5) {
             heavyProjectiles.push({
-                x: player.x, y: player.y,
-                targetX: targetX, targetY: targetY,
-                startX: player.x, startY: player.y,
-                progress: 0, speed: 0.035, damage: player.damage * 4.0, radius: 10, type: 'grenade'
+                x: player.x, y: player.y, targetX: targetX, targetY: targetY,
+                startX: player.x, startY: player.y, progress: 0, speed: 0.035,
+                damage: player.damage * dmgMult * 4.0, radius: 10, type: 'grenade'
             });
         } else if(currentWeapon === 6) {
             let targets = [];
             let sortedEnemies = [...enemies].sort((a,b) => Math.hypot(a.x-player.x, a.y-player.y) - Math.hypot(b.x-player.x, b.y-player.y));
             for(let i=0; i<Math.min(3, sortedEnemies.length); i++) {
-                if(Math.hypot(sortedEnemies[i].x - player.x, sortedEnemies[i].y - player.y) < 400) {
-                    targets.push(sortedEnemies[i]);
-                }
+                if(Math.hypot(sortedEnemies[i].x - player.x, sortedEnemies[i].y - player.y) < 400) targets.push(sortedEnemies[i]);
             }
             if(targets.length > 0) {
                 targets.forEach(e => {
-                    if(!e.isShielded) e.health -= player.damage * 1.5;
+                    if(!e.isShielded) e.health -= player.damage * dmgMult * 1.5;
                     for(let i=0; i<5; i++) particles.push(new Particle(e.x, e.y, '#38bdf8'));
                     if (e.health <= 0) onEnemyKilled(e);
                 });
             }
         } else if(currentWeapon === 7) {
             blackHoles.push({
-                x: player.x, y: player.y,
-                dx: Math.cos(baseAngle) * 3.5, dy: Math.sin(baseAngle) * 3.5,
+                x: player.x, y: player.y, dx: Math.cos(baseAngle) * 3.5, dy: Math.sin(baseAngle) * 3.5,
                 radius: 18, maxRadius: 100, duration: 4.0, damageTimer: 0
             });
         }
@@ -745,18 +831,14 @@
             if (hasGlobalMagnet || dDrone < 130 || dPlayer < 160) {
                 const angle = Math.atan2(player.y - coin.y, player.x - coin.x);
                 const magnetSpeed = hasGlobalMagnet ? 16 : 8;
-                coin.x += Math.cos(angle) * magnetSpeed;
-                coin.y += Math.sin(angle) * magnetSpeed;
+                coin.x += Math.cos(angle) * magnetSpeed; coin.y += Math.sin(angle) * magnetSpeed;
                 if (dPlayer < player.radius + 15) {
-                    gold += coin.val;
-                    droppedCoins.splice(i, 1);
-                    updateHUD();
+                    gold += coin.val; droppedCoins.splice(i, 1); updateHUD();
                 }
             }
         }
 
         if (player.droneCount <= 0 || enemies.length === 0) return;
-
         const now = Date.now();
         const effectiveDroneFireRate = isFrenzyActive ? 300 : player.droneFireRate;
 
@@ -779,8 +861,7 @@
                 if (nearestEnemy) {
                     const shootAngle = Math.atan2(nearestEnemy.y - droneY, nearestEnemy.x - droneX);
                     droneBullets.push({
-                        x: droneX, y: droneY,
-                        dx: Math.cos(shootAngle) * 12, dy: Math.sin(shootAngle) * 12,
+                        x: droneX, y: droneY, dx: Math.cos(shootAngle) * 12, dy: Math.sin(shootAngle) * 12,
                         radius: 3, damage: player.droneDamage * (isFrenzyActive ? 1.4 : 1), color: '#10B981'
                     });
                 }
@@ -817,25 +898,22 @@
     function spawnMeteor() {
         const targetX = player.x + (Math.random() - 0.5) * 600;
         const targetY = player.y + (Math.random() - 0.5) * 600;
-        
         meteorWarnings.push({
-            x: targetX,
-            y: targetY,
-            startX: targetX - 450,
-            startY: targetY - 700,
-            radius: 65, 
-            timer: 1.5, 
-            maxTimer: 1.5
+            x: targetX, y: targetY, startX: targetX - 450, startY: targetY - 700,
+            radius: 65, timer: 1.5, maxTimer: 1.5
         });
     }
 
     function damagePlayer(dmg) {
+        if (iFrameTimer > 0) return;
+
+        iFrameTimer = 0.8;
         player.lastDamageTime = Date.now();
+
         if(player.shield > 0) {
             player.shield -= dmg;
             if(player.shield < 0) {
-                player.health += player.shield;
-                player.shield = 0;
+                player.health += player.shield; player.shield = 0;
             }
         } else {
             player.health -= dmg;
@@ -846,13 +924,13 @@
 
     function startWave() {
         if (wave % 10 === 0) {
-            enemiesToSpawn = 0;
-            enemiesAlive = 1;
-            const bossTypes = ['boss_fire', 'boss_electric', 'boss_wind', 'boss_water', 'boss_galactic', 'boss_earth', 'boss_toxic', 'boss_solar'];
+            enemiesToSpawn = 0; enemiesAlive = 1;
+            const bossTypes = ['boss_fire', 'boss_electric', 'boss_wind', 'boss_water', 'boss_galactic', 'boss_earth', 'boss_toxic', 'boss_omega', 'boss_shenlong'];
             const bossIndex = (Math.floor(wave / 10) - 1) % bossTypes.length;
             spawnEnemy(bossTypes[bossIndex]);
         } else {
-            enemiesToSpawn = 12 + (wave * 7);
+            const baseCount = 8 + (wave * 4);
+            enemiesToSpawn = wave >= 8 ? Math.floor(baseCount * 1.25) : baseCount;
             enemiesAlive = enemiesToSpawn;
         }
         checkHighScore();
@@ -868,6 +946,11 @@
 
         document.getElementById('shockwave-text').innerText = isShockwaveReady ? "¡LISTO!" : `${shockwaveKills}/${SHOCKWAVE_MAX_KILLS}`;
         document.getElementById('shockwave-fill').style.width = `${(shockwaveKills / SHOCKWAVE_MAX_KILLS) * 100}%`;
+
+        document.getElementById('siphon-text').innerText = siphonReady ? "LISTO" : `${Math.ceil(siphonTimer)}s`;
+        document.getElementById('rebirth-level-text').innerText = `Renacimiento: ${rebirthCount}`;
+
+        document.getElementById('turret-hud-name').innerText = `TORRETA (${turrets.length}/${maxTurretsAllowed})`;
 
         const reqKills = getRequiredKills();
         if (!isFrenzyActive) {
@@ -894,6 +977,14 @@
         document.getElementById('supreme-section').style.display = (chassisLevel >= 5 && selectedSubclass && !isSupremeForm) ? 'block' : 'none';
     }
 
+    function updateAdvisorText() {
+        const advisor = document.getElementById('advisor-banner');
+        if (wave < 10) advisor.innerText = "💡 CONSEJO TÁCTICO: Compra 'Espinas Neón' para eliminar scouts rápidamente sin gastar munición.";
+        else if (wave < 20) advisor.innerText = "💡 CONSEJO TÁCTICO: El Leviatán Eléctrico es muy veloz. Prioriza mejorar la velocidad del motor.";
+        else if (wave < 40) advisor.innerText = "💡 CONSEJO TÁCTICO: Prepara el Drenaje Vampírico (Tecla F) contra los Jefes para curarte 5% de su HP máximo.";
+        else advisor.innerText = "💡 CONSEJO TÁCTICO: Evoluciona al Chasis Mk. III y escoge tu Clase en el árbol de evoluciones.";
+    }
+
     let lastTime = performance.now();
     function update() {
         if (inShop || gameOver) return;
@@ -902,6 +993,7 @@
         const dt = (now - lastTime) / 1000;
         lastTime = now;
 
+        if (iFrameTimer > 0) iFrameTimer -= dt;
         if (screenShakeTimer > 0) screenShakeTimer -= dt;
 
         updateSkillCD(dt);
@@ -924,9 +1016,10 @@
 
         if (isShooting) shoot();
 
-        if (enemiesToSpawn > 0 && Math.random() < 0.08) { spawnEnemy(); enemiesToSpawn--; }
+        const spawnRate = wave >= 8 ? 0.10 : 0.07;
+        if (enemiesToSpawn > 0 && Math.random() < spawnRate) { spawnEnemy(); enemiesToSpawn--; }
         if (Math.random() < 0.0015 && powerUps.length < 2) spawnPowerUp();
-        if (Math.random() < 0.005) spawnMeteor();
+        if (Math.random() < 0.004) spawnMeteor();
 
         for (let index = heavyProjectiles.length - 1; index >= 0; index--) {
             const hp = heavyProjectiles[index];
@@ -957,8 +1050,7 @@
                 const dist = Math.hypot(bh.x - e.x, bh.y - e.y);
                 if (dist < 300) {
                     const angle = Math.atan2(bh.y - e.y, bh.x - e.x);
-                    e.x += Math.cos(angle) * 5;
-                    e.y += Math.sin(angle) * 5;
+                    e.x += Math.cos(angle) * 5; e.y += Math.sin(angle) * 5;
                     if (dist < bh.radius && !e.isShielded) {
                         e.health -= dt * 75;
                         if (e.health <= 0) onEnemyKilled(e);
@@ -976,7 +1068,6 @@
         for (let index = meteorWarnings.length - 1; index >= 0; index--) {
             const mw = meteorWarnings[index];
             mw.timer -= dt;
-            
             if (mw.timer < 0.8) {
                 const fallProgress = (0.8 - mw.timer) / 0.8;
                 const currentX = mw.startX + (mw.x - mw.startX) * fallProgress;
@@ -988,7 +1079,7 @@
                 triggerScreenShake(0.4);
                 for(let i=0; i<50; i++) particles.push(new Particle(mw.x, mw.y, Math.random()<0.5 ? '#ef4444' : '#f59e0b'));
 
-                if (Math.hypot(player.x - mw.x, player.y - mw.y) < mw.radius && !isFrenzyActive) damagePlayer(55);
+                if (Math.hypot(player.x - mw.x, player.y - mw.y) < mw.radius && !isFrenzyActive) damagePlayer(40);
                 enemies.forEach((e) => {
                     if (Math.hypot(e.x - mw.x, e.y - mw.y) < mw.radius) {
                         e.health -= 180;
@@ -1008,14 +1099,34 @@
             }
 
             if (e.burnTicks > 0) {
-                e.health -= 0.35;
-                e.burnTicks -= dt;
+                e.health -= 0.35; e.burnTicks -= dt;
                 if (Math.random() < 0.2) particles.push(new Particle(e.x, e.y, '#ef4444'));
             }
             if (e.poisonTicks > 0) {
-                e.health -= 0.25;
-                e.poisonTicks -= dt;
+                e.health -= 0.25; e.poisonTicks -= dt;
                 if (Math.random() < 0.2) particles.push(new Particle(e.x, e.y, '#10B981'));
+            }
+
+            // EVOLUCIÓN SHENLONG (VERDE) -> SUPER SHENRON (DORADO GIGANTE) AL 50% HP
+            if (e.type === 'boss_shenlong' && !e.isPhase2 && e.health <= e.maxHealth * 0.5) {
+                e.isPhase2 = true;
+                e.bossName = "SUPER SHENRON (DRAGÓN DIVINO PLANETARIO)";
+                e.color = "#FACC15";
+                e.speed *= 1.4;
+                e.radius = 240; // Crece de tamaño masivamente
+                triggerScreenShake(0.7);
+                for(let i=0; i<60; i++) particles.push(new Particle(e.x, e.y, '#f59e0b'));
+            }
+
+            // OMEGA SHENRON (1 ESFERA -> 7 ESFERAS DEL DRAGÓN MALIGNO)
+            if (e.type === 'boss_omega' && !e.isPhase2 && e.health <= e.maxHealth * 0.5) {
+                e.isPhase2 = true;
+                e.bossName = "OMEGA SHENRON (7 ESFERAS DE LA CORRUPCIÓN)";
+                e.color = "#EF4444";
+                e.speed *= 1.5;
+                e.radius = 210;
+                triggerScreenShake(0.6);
+                for(let i=0; i<60; i++) particles.push(new Particle(e.x, e.y, '#ef4444'));
             }
         });
 
@@ -1090,52 +1201,38 @@
             if (activePowerUp !== 'freeze') {
                 if (e.type === 'shooter') {
                     if (distToPlayer > 350) { e.x += Math.cos(angle) * e.speed; e.y += Math.sin(angle) * e.speed; }
-                    if (Date.now() - e.lastShot > 1600) {
+                    const shootCD = 1600;
+                    if (Date.now() - e.lastShot > shootCD) {
                         e.lastShot = Date.now();
-                        enemyBullets.push({ x: e.x, y: e.y, dx: Math.cos(angle) * 7.5, dy: Math.sin(angle) * 7.5, radius: 5, damage: 15 + wave, color: '#A855F7' });
+                        enemyBullets.push({ x: e.x, y: e.y, dx: Math.cos(angle) * 7.5, dy: Math.sin(angle) * 7.5, radius: 5, damage: 12 + wave, color: '#A855F7' });
                     }
                 } 
                 else if (e.type.startsWith('boss_')) {
-                    e.animTick += dt * 4.0;
+                    e.animTick = (e.animTick || 0) + dt * 4.0;
 
-                    // COMPORTAMIENTOS DINÁMICOS DE DRAGONES Y LEVIATANES
                     if (e.type === 'boss_fire') {
-                        const rush = Math.sin(e.animTick * 2) > 0.6 ? 2.3 : 0.8;
-                        e.x += Math.cos(angle) * e.speed * rush;
-                        e.y += Math.sin(angle) * e.speed * rush;
+                        const rush = Math.sin(e.animTick * 2.2) > 0.4 ? 2.2 : 0.9;
+                        e.x += Math.cos(angle) * e.speed * rush; e.y += Math.sin(angle) * e.speed * rush;
                     } 
-                    else if (e.type === 'boss_electric') {
-                        const snakeAngle = angle + Math.sin(e.animTick * 2.5) * 0.55;
-                        e.x += Math.cos(snakeAngle) * e.speed;
-                        e.y += Math.sin(snakeAngle) * e.speed;
+                    else if (e.type === 'boss_electric' || e.type === 'boss_water' || e.type === 'boss_galactic') {
+                        const snakeAngle = angle + Math.sin(e.animTick * 2.8) * 0.65;
+                        e.x += Math.cos(snakeAngle) * e.speed * 1.1; e.y += Math.sin(snakeAngle) * e.speed * 1.1;
                     }
                     else if (e.type === 'boss_wind') {
-                        const dash = Math.sin(e.animTick * 3.5) > 0.4 ? 2.6 : 0.4;
-                        e.x += Math.cos(angle) * e.speed * dash;
-                        e.y += Math.sin(angle) * e.speed * dash;
-                    }
-                    else if (e.type === 'boss_water') {
-                        const waveAngle = angle + Math.cos(e.animTick * 1.8) * 0.4;
-                        e.x += Math.cos(waveAngle) * e.speed;
-                        e.y += Math.sin(waveAngle) * e.speed;
-                    }
-                    else if (e.type === 'boss_galactic') {
-                        const pulse = Math.pow(Math.sin(e.animTick * 2), 4) * 3.5;
-                        e.x += Math.cos(angle) * e.speed * pulse;
-                        e.y += Math.sin(angle) * e.speed * pulse;
+                        const dash = Math.sin(e.animTick * 4) > 0.3 ? 2.5 : 0.5;
+                        e.x += Math.cos(angle) * e.speed * dash; e.y += Math.sin(angle) * e.speed * dash;
                     }
                     else if (e.type === 'boss_earth') {
-                        e.x += Math.cos(angle) * e.speed;
-                        e.y += Math.sin(angle) * e.speed;
+                        const charge = Math.sin(e.animTick * 1.5) > 0.5 ? 2.0 : 0.7;
+                        e.x += Math.cos(angle) * e.speed * charge; e.y += Math.sin(angle) * e.speed * charge;
                     }
                     else if (e.type === 'boss_toxic') {
-                        const zigZag = angle + Math.sin(e.animTick * 5) * 0.75;
-                        e.x += Math.cos(zigZag) * e.speed * 1.3;
-                        e.y += Math.sin(zigZag) * e.speed * 1.3;
+                        const zigZag = angle + Math.sin(e.animTick * 5.5) * 0.85;
+                        e.x += Math.cos(zigZag) * e.speed * 1.3; e.y += Math.sin(zigZag) * e.speed * 1.3;
                     }
-                    else if (e.type === 'boss_solar') {
-                        e.x += Math.cos(angle) * e.speed * 0.9;
-                        e.y += Math.sin(angle) * e.speed * 0.9;
+                    else if (e.type === 'boss_omega' || e.type === 'boss_shenlong') {
+                        const celestialSpin = angle + Math.sin(e.animTick * 2) * 0.4;
+                        e.x += Math.cos(celestialSpin) * e.speed * 1.1; e.y += Math.sin(celestialSpin) * e.speed * 1.1;
                     }
 
                     if (Date.now() - e.lastSpawn > 4500) {
@@ -1146,12 +1243,13 @@
                         }
                     }
 
-                    if (Date.now() - e.lastShot > 1600) {
+                    const bossShotCD = e.isPhase2 ? 1100 : 1600;
+                    if (Date.now() - e.lastShot > bossShotCD) {
                         e.lastShot = Date.now();
-                        const bulletCount = 14;
+                        const bulletCount = e.isPhase2 ? 22 : 12;
                         for (let i = 0; i < bulletCount; i++) {
                             const bAngle = angle + (Math.PI * 2 / bulletCount) * i;
-                            enemyBullets.push({ x: e.x, y: e.y, dx: Math.cos(bAngle) * 7.5, dy: Math.sin(bAngle) * 7.5, radius: 8, damage: 25 + wave, color: e.color });
+                            enemyBullets.push({ x: e.x, y: e.y, dx: Math.cos(bAngle) * 7.5, dy: Math.sin(bAngle) * 7.5, radius: 8, damage: 20 + wave, color: e.color });
                         }
                     }
                 } else {
@@ -1159,21 +1257,18 @@
                 }
             }
 
-            if (distToPlayer < player.radius + e.radius + 6) {
+            if (distToPlayer < player.radius + e.radius) {
                 if (spikeLevel > 0 && !e.isShielded) {
                     e.health -= spikeDamage * dt * 10;
                     for (let i = 0; i < 2; i++) particles.push(new Particle(e.x, e.y, '#eab308'));
                 }
 
-                if (distToPlayer < player.radius + e.radius) {
-                    if (isFrenzyActive) {
-                        e.health = 0; onEnemyKilled(e); continue;
-                    } else {
-                        damagePlayer(e.damage * (e.type === 'kamikaze' || e.type.startsWith('minion_') ? 1.4 : 0.05));
-                        if (e.type === 'kamikaze' || e.type.startsWith('minion_')) { e.health = 0; onEnemyKilled(e); continue; }
-                    }
+                if (isFrenzyActive) {
+                    e.health = 0; onEnemyKilled(e); continue;
+                } else {
+                    damagePlayer(e.damage * (e.type === 'kamikaze' || e.type.startsWith('minion_') ? 1.0 : 0.05));
+                    if (e.type === 'kamikaze' || e.type.startsWith('minion_')) { e.health = 0; onEnemyKilled(e); continue; }
                 }
-
                 if (e.health <= 0) { onEnemyKilled(e); continue; }
             }
 
@@ -1181,8 +1276,7 @@
                 const b = playerBullets[bIndex];
                 if (Math.hypot(b.x - e.x, b.y - e.y) < e.radius + b.radius) {
                     if (!e.isShielded) {
-                        e.health -= b.damage;
-                        applyElementalEffect(e);
+                        e.health -= b.damage; applyElementalEffect(e);
                     }
                     particles.push(new Particle(b.x, b.y, e.isShielded ? '#38bdf8' : e.color));
                     if (!b.piercing) playerBullets.splice(bIndex, 1);
@@ -1227,9 +1321,18 @@
         const idx = enemies.indexOf(e);
         if (idx === -1) return;
 
+        if ((e.type === 'boss_galactic' || e.type === 'boss_earth' || e.type === 'boss_toxic') && !e.isPhase2) {
+            e.isPhase2 = true;
+            e.health = e.maxHealth * 1.5;
+            e.maxHealth = e.health;
+            e.speed *= 1.35;
+            triggerScreenShake(0.5);
+            for(let i=0; i<40; i++) particles.push(new Particle(e.x, e.y, '#f59e0b'));
+            return;
+        }
+
         enemiesAlive--;
         gold += e.goldValue;
-
         droppedCoins.push({ x: e.x, y: e.y, val: Math.floor(e.goldValue * 0.4) });
 
         if (!isShockwaveReady) {
@@ -1244,9 +1347,15 @@
             killsForFrenzy++;
             if (killsForFrenzy >= getRequiredKills()) triggerFrenzy();
         }
-        for(let i=0; i<12; i++) particles.push(new Particle(e.x, e.y, e.color));
+
+        for(let i=0; i<15; i++) particles.push(new Particle(e.x, e.y, e.color));
         enemies.splice(idx, 1);
         updateHUD();
+
+        if ((e.type === 'boss_shenlong' || e.type === 'boss_omega') && wave >= 80) {
+            setTimeout(openRebirthModal, 500);
+            return;
+        }
 
         if (enemiesAlive <= 0 && enemiesToSpawn <= 0) {
             collectAllCoinsOnWaveEnd();
@@ -1254,22 +1363,286 @@
         }
     }
 
-    function draw() {
+    function openRebirthModal() {
+        rebirthSeeds += 3;
+        document.getElementById('rebirth-seeds-count').innerText = `Semillas de Renacimiento: ${rebirthSeeds}`;
+        document.getElementById('rebirth-modal').style.display = 'flex';
+    }
+
+    function buyRebirthUpgrade(type) {
+        let cost = 1;
+        if (type === 'branchesDmg') cost = 2;
+        if (type === 'leavesDrone') cost = 3;
+
+        if (rebirthSeeds >= cost) {
+            rebirthSeeds -= cost;
+            rebirthUpgrades[type]++;
+            document.getElementById(`lvl-${type}`).innerText = rebirthUpgrades[type];
+            document.getElementById('rebirth-seeds-count').innerText = `Semillas de Renacimiento: ${rebirthSeeds}`;
+        }
+    }
+
+    function confirmRebirthAndStart() {
+        rebirthCount++;
+        wave = 1;
+        document.getElementById('rebirth-modal').style.display = 'none';
+        applyRebirthPermanentStats();
+        startWave();
+    }
+
+    // DIBUJO DE SHENLONG / SUPER SHENRON & OMEGA SHENRON (1 O 7 ESFERAS MALIGNAS)
+    function drawShenlongBoss(e) {
+        const isSuper = e.isPhase2;
+        ctx.strokeStyle = isSuper ? '#FEF08A' : '#34D399'; ctx.lineWidth = 4; ctx.fillStyle = isSuper ? '#78350F' : '#064E3B';
+
         ctx.save();
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.shadowColor = isSuper ? '#F59E0B' : '#10B981';
+        ctx.shadowBlur = isSuper ? 60 : 35;
+
+        // Alas/Aletas Divinas
+        [-1, 1].forEach(side => {
+            const count = isSuper ? 5 : 3;
+            for(let p = 0; p < count; p++) {
+                ctx.fillStyle = isSuper ? '#B45309' : '#047857'; ctx.strokeStyle = isSuper ? '#FEF08A' : '#6EE7B7';
+                ctx.beginPath();
+                ctx.moveTo(-30, side * (20 + p * 20));
+                ctx.lineTo(-120 - p * 20, side * (60 + p * 25));
+                ctx.lineTo(-15, side * (50 + p * 20));
+                ctx.closePath(); ctx.fill(); ctx.stroke();
+            }
+        });
+
+        // Cuerpo Serpentino Divino
+        ctx.fillStyle = isSuper ? '#FEF08A' : '#10B981'; ctx.strokeStyle = isSuper ? '#F59E0B' : '#047857';
+        ctx.beginPath();
+        ctx.moveTo(80, 0); ctx.lineTo(30, -70); ctx.lineTo(-60, -60); ctx.lineTo(-90, 0); ctx.lineTo(-60, 60); ctx.lineTo(30, 70);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+
+        // Núcleo u Orbe Místico
+        ctx.fillStyle = isSuper ? '#EF4444' : '#F59E0B'; ctx.strokeStyle = '#FEF08A'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(0, 0, 26, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+        ctx.fillStyle = '#FEF08A';
+        ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fill();
+
+        // Bigotes/Cuernos Legendarios
+        ctx.fillStyle = isSuper ? '#F59E0B' : '#D97706'; ctx.strokeStyle = isSuper ? '#FEF08A' : '#FDE047';
+        ctx.beginPath(); ctx.moveTo(45, -40); ctx.lineTo(120, -95); ctx.lineTo(75, -30); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(45, 40); ctx.lineTo(120, 95); ctx.lineTo(75, 30); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+        // Ojos
+        ctx.fillStyle = isSuper ? '#EF4444' : '#EF4444';
+        ctx.beginPath(); ctx.arc(55, -20, 8, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(55, 20, 8, 0, Math.PI * 2); ctx.fill();
+
+        ctx.restore();
+    }
+
+    function drawOmegaShenronBoss(e) {
+        const is7Balls = e.isPhase2;
+        ctx.strokeStyle = is7Balls ? '#DC2626' : '#991B1B'; ctx.lineWidth = 4; ctx.fillStyle = is7Balls ? '#450A0A' : '#0f172a';
+
+        ctx.save();
+        ctx.shadowColor = is7Balls ? '#EF4444' : '#991B1B';
+        ctx.shadowBlur = is7Balls ? 50 : 25;
+
+        // Picos de Obsidiana en la Espalda
+        [-1, 1].forEach(side => {
+            for(let p = 0; p < 4; p++) {
+                ctx.fillStyle = is7Balls ? '#7f1d1d' : '#1e293b'; ctx.strokeStyle = '#EF4444';
+                ctx.beginPath();
+                ctx.moveTo(-20, side * (15 + p * 18));
+                ctx.lineTo(-80 - p * 15, side * (45 + p * 22));
+                ctx.lineTo(-10, side * (35 + p * 18));
+                ctx.closePath(); ctx.fill(); ctx.stroke();
+            }
+        });
+
+        // Chasis del Dragón Maligno
+        ctx.fillStyle = is7Balls ? '#18181b' : '#27272a'; ctx.strokeStyle = is7Balls ? '#EF4444' : '#71717a';
+        ctx.beginPath();
+        ctx.moveTo(60, 0); ctx.lineTo(20, -50); ctx.lineTo(-40, -45); ctx.lineTo(-60, 0); ctx.lineTo(-40, 45); ctx.lineTo(20, 50);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+
+        // DIBUJO DE LAS ESFERAS DEL DRAGÓN MALIGNO (1 ESFERA O LAS 7 ESFERAS)
+        const ballCount = is7Balls ? 7 : 1;
+        const radiusDist = 28;
+        for (let b = 0; b < ballCount; b++) {
+            ctx.save();
+            const bAngle = (Math.PI * 2 / ballCount) * b;
+            const bx = ballCount === 1 ? 0 : Math.cos(bAngle) * radiusDist;
+            const by = ballCount === 1 ? 0 : Math.sin(bAngle) * radiusDist;
+
+            ctx.fillStyle = '#f59e0b'; ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.arc(bx, by, is7Balls ? 8 : 14, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath(); ctx.arc(bx, by, is7Balls ? 2.5 : 4, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+        }
+
+        // Ojos Rojos del Dragón Corrupto
+        ctx.fillStyle = '#EF4444';
+        ctx.beginPath(); ctx.arc(42, -15, 6, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(42, 15, 6, 0, Math.PI * 2); ctx.fill();
+
+        ctx.restore();
+    }
+
+    function drawDetailedPolygonalDragon(e, darkColor, primaryColor, accentColor, eyeColor) {
+        ctx.strokeStyle = primaryColor; ctx.lineWidth = 2.5; ctx.fillStyle = darkColor;
+        const wingSpan = 145; const wingFlap = Math.sin((e.animTick || 0) * 3) * 20;
+
+        [-1, 1].forEach(side => {
+            ctx.beginPath(); ctx.moveTo(0, side * 20); ctx.lineTo(45, side * (80 + wingFlap));
+            ctx.lineTo(wingSpan, side * (120 + wingFlap)); ctx.lineTo(85, side * (150 + wingFlap));
+            ctx.lineTo(30, side * (110 + wingFlap)); ctx.lineTo(-25, side * (70 + wingFlap));
+            ctx.lineTo(-50, side * (25)); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+            ctx.beginPath(); ctx.moveTo(45, side * (80 + wingFlap)); ctx.lineTo(85, side * (150 + wingFlap));
+            ctx.moveTo(45, side * (80 + wingFlap)); ctx.lineTo(30, side * (110 + wingFlap)); ctx.stroke();
+        });
+
+        ctx.fillStyle = darkColor;
+        ctx.beginPath(); ctx.moveTo(-90, 0); ctx.lineTo(-40, -45); ctx.lineTo(25, -35); ctx.lineTo(70, 0); ctx.lineTo(25, 35); ctx.lineTo(-40, 45);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+
+        ctx.fillStyle = accentColor;
+        ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(25, -15); ctx.lineTo(40, 0); ctx.lineTo(25, 15); ctx.closePath(); ctx.fill();
+
+        ctx.fillStyle = primaryColor;
+        ctx.beginPath(); ctx.moveTo(45, -28); ctx.lineTo(110, -12); ctx.lineTo(125, 0); ctx.lineTo(110, 12); ctx.lineTo(45, 28); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+        ctx.fillStyle = accentColor; ctx.fillRect(70, -18, 22, 6); ctx.fillRect(70, 12, 22, 6);
+        ctx.beginPath(); ctx.moveTo(50, -22); ctx.lineTo(20, -70); ctx.lineTo(35, -70); ctx.lineTo(55, -20); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(50, 22); ctx.lineTo(20, 70); ctx.lineTo(35, 70); ctx.lineTo(55, 20); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+        ctx.strokeStyle = accentColor; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(105, -10); ctx.lineTo(135, -45); ctx.lineTo(165, -30); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(105, 10); ctx.lineTo(135, 45); ctx.lineTo(165, 30); ctx.stroke();
+
+        ctx.fillStyle = eyeColor; ctx.beginPath(); ctx.arc(85, -10, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(85, 10, 5, 0, Math.PI * 2); ctx.fill();
+    }
+
+    function drawColossalLeviathan(e, darkColor, primaryColor, accentColor, eyeColor) {
+        ctx.lineWidth = 3;
+
+        for (let i = 8; i >= 1; i--) {
+            const wave = Math.sin((e.animTick || 0) * 2.2 + i * 0.7) * 28;
+            const segRadius = 42 - (i * 2.5);
+            ctx.save(); ctx.translate(-30 - (i * 26), wave);
+            
+            ctx.fillStyle = accentColor; ctx.strokeStyle = primaryColor;
+            ctx.beginPath(); ctx.moveTo(0, -segRadius - 16); ctx.lineTo(14, -segRadius); ctx.lineTo(-14, -segRadius); ctx.closePath(); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, segRadius + 16); ctx.lineTo(14, segRadius); ctx.lineTo(-14, segRadius); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+            ctx.fillStyle = i % 2 === 0 ? darkColor : primaryColor;
+            ctx.beginPath(); ctx.arc(0, 0, segRadius, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.restore();
+        }
+
+        ctx.fillStyle = darkColor; ctx.strokeStyle = primaryColor;
+        ctx.beginPath(); ctx.moveTo(10, -55); ctx.lineTo(115, -28); ctx.lineTo(138, 0); ctx.lineTo(115, 28); ctx.lineTo(10, 55); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+        [-1, 1].forEach(side => {
+            for (let t = 0; t < 3; t++) {
+                ctx.save(); ctx.translate(130, side * (8 + t * 10));
+                for (let r = 0; r < 6; r++) {
+                    const tAngle = side * (0.3 + Math.sin((e.animTick || 0) * 3.5 + r * 0.5 + t) * 0.3);
+                    ctx.rotate(tAngle); ctx.fillStyle = r % 2 === 0 ? accentColor : '#0f172a'; ctx.strokeStyle = primaryColor;
+                    ctx.fillRect(0, 0, 15, 5); ctx.strokeRect(0, 0, 15, 5); ctx.translate(15, 0);
+                }
+                ctx.restore();
+            }
+        });
+
+        ctx.fillStyle = eyeColor; ctx.beginPath(); ctx.arc(90, -18, 7, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(90, 18, 7, 0, Math.PI * 2); ctx.fill();
+    }
+
+    function drawFantasyTank(angle) {
+        ctx.save();
+        ctx.rotate(angle);
+
+        let mainColor = '#0EA5E9';
+        let accentColor = '#38BDF8';
+        if (selectedTankClass === 'obsidian') { mainColor = '#ef4444'; accentColor = '#f97316'; }
+        if (selectedTankClass === 'arcane') { mainColor = '#a855f7'; accentColor = '#c084fc'; }
+        if (selectedTankClass === 'devourer') { mainColor = '#10B981'; accentColor = '#34D399'; }
+        if (isSupremeForm) { mainColor = '#FACC15'; accentColor = '#FEF08A'; }
+
+        [-1, 1].forEach(side => {
+            ctx.save();
+            ctx.fillStyle = accentColor;
+            ctx.shadowColor = accentColor;
+            ctx.shadowBlur = 15;
+            ctx.beginPath();
+            ctx.moveTo(-15, side * 18);
+            ctx.lineTo(-35, side * 38);
+            ctx.lineTo(-10, side * 32);
+            ctx.lineTo(5, side * 22);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        });
+
+        ctx.fillStyle = '#0f172a';
+        ctx.strokeStyle = mainColor;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(-22, -26); ctx.lineTo(15, -26); ctx.lineTo(24, -16); ctx.lineTo(15, 26); ctx.lineTo(-22, 26); ctx.lineTo(-30, 0);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+
+        const cCount = player.cannons;
+        const spread = 0.22;
+        const startA = -((cCount - 1) * spread) / 2;
+
+        for (let i = 0; i < cCount; i++) {
+            ctx.save();
+            ctx.rotate(startA + i * spread);
+            
+            ctx.fillStyle = '#1e293b';
+            ctx.strokeStyle = accentColor;
+            ctx.lineWidth = 2;
+            ctx.fillRect(5, -4, 28 + (chassisLevel * 2), 8);
+            ctx.strokeRect(5, -4, 28 + (chassisLevel * 2), 8);
+
+            ctx.fillStyle = accentColor;
+            ctx.shadowColor = accentColor;
+            ctx.shadowBlur = 10;
+            ctx.fillRect(20 + (chassisLevel * 2), -2, 10, 4);
+            ctx.restore();
+        }
+
+        ctx.save();
+        ctx.fillStyle = mainColor;
+        ctx.shadowColor = accentColor;
+        ctx.shadowBlur = 20;
+        ctx.beginPath();
+        ctx.moveTo(0, -14); ctx.lineTo(14, 0); ctx.lineTo(0, 14); ctx.lineTo(-14, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.restore();
+    }
+
+    function draw() {
+        ctx.save(); ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         if (screenShakeTimer > 0) {
-            const shakeX = (Math.random() - 0.5) * 10;
-            const shakeY = (Math.random() - 0.5) * 10;
+            const shakeX = (Math.random() - 0.5) * 10; const shakeY = (Math.random() - 0.5) * 10;
             ctx.translate(shakeX, shakeY);
         }
 
         const camX = player.x - canvas.width / 2;
         const camY = player.y - canvas.height / 2;
 
-        ctx.strokeStyle = '#1e293b';
-        ctx.lineWidth = 1;
-        const gridSize = 100;
+        ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 1; const gridSize = 100;
         const startX = Math.floor(camX / gridSize) * gridSize;
         const startY = Math.floor(camY / gridSize) * gridSize;
 
@@ -1281,15 +1654,8 @@
         }
 
         activeShockwaves.forEach(sw => {
-            ctx.save();
-            ctx.strokeStyle = '#10B981';
-            ctx.lineWidth = 6;
-            ctx.shadowColor = '#34D399';
-            ctx.shadowBlur = 15;
-            ctx.beginPath();
-            ctx.arc(sw.x - camX, sw.y - camY, sw.radius, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.restore();
+            ctx.save(); ctx.strokeStyle = '#10B981'; ctx.lineWidth = 6; ctx.shadowColor = '#34D399'; ctx.shadowBlur = 15;
+            ctx.beginPath(); ctx.arc(sw.x - camX, sw.y - camY, sw.radius, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
         });
 
         meteorWarnings.forEach(mw => {
@@ -1302,37 +1668,24 @@
                 const currentX = mw.startX + (mw.x - mw.startX) * fallProgress;
                 const currentY = mw.startY + (mw.y - mw.startY) * fallProgress;
 
-                ctx.save();
-                ctx.strokeStyle = '#f97316'; ctx.lineWidth = 12;
-                ctx.beginPath();
-                ctx.moveTo(mw.startX - camX, mw.startY - camY);
-                ctx.lineTo(currentX - camX, currentY - camY);
-                ctx.stroke();
-
-                ctx.fillStyle = '#ef4444';
-                ctx.shadowColor = '#f59e0b';
-                ctx.shadowBlur = 20;
-                ctx.beginPath();
-                ctx.arc(currentX - camX, currentY - camY, 16, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
+                ctx.save(); ctx.strokeStyle = '#f97316'; ctx.lineWidth = 12;
+                ctx.beginPath(); ctx.moveTo(mw.startX - camX, mw.startY - camY); ctx.lineTo(currentX - camX, currentY - camY); ctx.stroke();
+                ctx.fillStyle = '#ef4444'; ctx.shadowColor = '#f59e0b'; ctx.shadowBlur = 20;
+                ctx.beginPath(); ctx.arc(currentX - camX, currentY - camY, 16, 0, Math.PI * 2); ctx.fill(); ctx.restore();
             }
         });
 
         droppedCoins.forEach(c => {
-            ctx.fillStyle = '#f59e0b';
-            ctx.beginPath(); ctx.arc(c.x - camX, c.y - camY, 4, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.arc(c.x - camX, c.y - camY, 4, 0, Math.PI * 2); ctx.fill();
         });
 
         turrets.forEach(t => {
-            ctx.fillStyle = '#a855f7';
-            ctx.beginPath(); ctx.arc(t.x - camX, t.y - camY, t.radius, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#a855f7'; ctx.beginPath(); ctx.arc(t.x - camX, t.y - camY, t.radius, 0, Math.PI * 2); ctx.fill();
             ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.stroke();
         });
 
         mines.forEach(m => {
-            ctx.fillStyle = '#ef4444';
-            ctx.beginPath(); ctx.arc(m.x - camX, m.y - camY, m.radius, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(m.x - camX, m.y - camY, m.radius, 0, Math.PI * 2); ctx.fill();
             ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.stroke();
         });
 
@@ -1342,165 +1695,53 @@
         });
 
         blackHoles.forEach(bh => {
-            ctx.fillStyle = '#0f172a';
-            ctx.strokeStyle = '#a855f7'; ctx.lineWidth = 4;
+            ctx.fillStyle = '#0f172a'; ctx.strokeStyle = '#a855f7'; ctx.lineWidth = 4;
             ctx.beginPath(); ctx.arc(bh.x - camX, bh.y - camY, bh.radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
         });
 
         heavyProjectiles.forEach(hp => {
-            ctx.fillStyle = '#f97316';
-            const arcHeight = Math.sin(hp.progress * Math.PI) * 40;
+            ctx.fillStyle = '#f97316'; const arcHeight = Math.sin(hp.progress * Math.PI) * 40;
             ctx.beginPath(); ctx.arc(hp.x - camX, hp.y - camY - arcHeight, hp.radius, 0, Math.PI * 2); ctx.fill();
         });
 
-        const mouseCamX = mousePos.x + camX;
-        const mouseCamY = mousePos.y + camY;
-        const angle = Math.atan2(mouseCamY - player.y, mouseCamX - player.x);
+        if (iFrameTimer <= 0 || Math.floor(Date.now() / 80) % 2 === 0) {
+            const mouseCamX = mousePos.x + camX; const mouseCamY = mousePos.y + camY;
+            const angle = Math.atan2(mouseCamY - player.y, mouseCamX - player.x);
 
-        ctx.save();
-        ctx.translate(player.x - camX, player.y - camY);
+            ctx.save();
+            ctx.translate(player.x - camX, player.y - camY);
 
-        if (isFrenzyActive || isSupremeForm) {
-            const glowColor = isSupremeForm ? '#FACC15' : `hsl(${(Date.now() / 4) % 360}, 100%, 50%)`;
-            ctx.shadowColor = glowColor; ctx.shadowBlur = 35; ctx.strokeStyle = glowColor; ctx.lineWidth = 6;
-            ctx.beginPath(); ctx.arc(0, 0, player.radius + 14, 0, Math.PI * 2); ctx.stroke();
-        }
-
-        const cRadius = player.radius + 40;
-        const cX = Math.cos(player.collectorDroneAngle) * cRadius;
-        const cY = Math.sin(player.collectorDroneAngle) * cRadius;
-        ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.arc(cX, cY, 4, 0, Math.PI * 2); ctx.fill();
-
-        if (player.droneCount > 0) {
-            const orbitDistance = player.radius + 28;
-            const angleStep = (Math.PI * 2) / player.droneCount;
-
-            for (let i = 0; i < player.droneCount; i++) {
-                const dAngle = player.droneOrbitAngle + i * angleStep;
-                const dx = Math.cos(dAngle) * orbitDistance;
-                const dy = Math.sin(dAngle) * orbitDistance;
-
-                ctx.save();
-                ctx.translate(dx, dy); ctx.rotate(dAngle + Math.PI / 2);
-                ctx.fillStyle = '#10B981'; ctx.shadowColor = '#10B981'; ctx.shadowBlur = 8;
-                ctx.beginPath(); ctx.moveTo(0, -7); ctx.lineTo(5, 5); ctx.lineTo(-5, 5); ctx.closePath(); ctx.fill();
-                ctx.restore();
+            if (isFrenzyActive || isSupremeForm) {
+                const glowColor = isSupremeForm ? '#FACC15' : `hsl(${(Date.now() / 4) % 360}, 100%, 50%)`;
+                ctx.shadowColor = glowColor; ctx.shadowBlur = 35; ctx.strokeStyle = glowColor; ctx.lineWidth = 6;
+                ctx.beginPath(); ctx.arc(0, 0, player.radius + 14, 0, Math.PI * 2); ctx.stroke();
             }
-        }
 
-        if (player.shield > 0) {
-            ctx.save();
-            ctx.strokeStyle = '#38bdf8';
-            ctx.lineWidth = 3;
-            ctx.shadowColor = '#0EA5E9';
-            ctx.shadowBlur = 12;
-            ctx.beginPath();
-            ctx.arc(0, 0, player.radius + 8, 0, Math.PI * 2);
-            ctx.stroke();
+            const cRadius = player.radius + 40;
+            const cX = Math.cos(player.collectorDroneAngle) * cRadius;
+            const cY = Math.sin(player.collectorDroneAngle) * cRadius;
+            ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.arc(cX, cY, 4, 0, Math.PI * 2); ctx.fill();
 
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.arc(0, 0, player.radius + 6, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.restore();
-        }
-
-        ctx.rotate(angle);
-
-        if (spikeLevel > 0) {
-            ctx.save();
-            ctx.strokeStyle = isSupremeForm ? '#FACC15' : (selectedTankClass === 'obsidian' ? '#ef4444' : (selectedTankClass === 'arcane' ? '#a855f7' : '#eab308'));
-            ctx.lineWidth = 2.5;
-            const spikesCount = 8;
-            for (let i = 0; i < spikesCount; i++) {
-                const sAngle = (Math.PI * 2 / spikesCount) * i;
-                ctx.beginPath();
-                ctx.moveTo(Math.cos(sAngle) * (player.radius + 2), Math.sin(sAngle) * (player.radius + 2));
-                ctx.lineTo(Math.cos(sAngle) * (player.radius + 10 + spikeLevel * 2), Math.sin(sAngle) * (player.radius + 10 + spikeLevel * 2));
-                ctx.stroke();
+            if (player.droneCount > 0) {
+                const orbitDistance = player.radius + 28; const angleStep = (Math.PI * 2) / player.droneCount;
+                for (let i = 0; i < player.droneCount; i++) {
+                    const dAngle = player.droneOrbitAngle + i * angleStep;
+                    const dx = Math.cos(dAngle) * orbitDistance; const dy = Math.sin(dAngle) * orbitDistance;
+                    ctx.save(); ctx.translate(dx, dy); ctx.rotate(dAngle + Math.PI / 2);
+                    ctx.fillStyle = '#10B981'; ctx.shadowColor = '#10B981'; ctx.shadowBlur = 8;
+                    ctx.beginPath(); ctx.moveTo(0, -7); ctx.lineTo(5, 5); ctx.lineTo(-5, 5); ctx.closePath(); ctx.fill(); ctx.restore();
+                }
             }
+
+            if (player.shield > 0) {
+                ctx.save(); ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 3; ctx.shadowColor = '#0EA5E9'; ctx.shadowBlur = 12;
+                ctx.beginPath(); ctx.arc(0, 0, player.radius + 8, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+            }
+
+            drawFantasyTank(angle);
+
             ctx.restore();
         }
-
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(-player.radius - 2, -player.radius - 6, player.radius * 2 + 4, 8);
-        ctx.fillRect(-player.radius - 2, player.radius - 2, player.radius * 2 + 4, 8);
-
-        ctx.fillStyle = isFrenzyActive ? '#facc15' : '#38bdf8';
-        for(let i = -player.radius + 2; i < player.radius; i += 7) {
-            ctx.fillRect(i, -player.radius - 6, 3, 8);
-            ctx.fillRect(i, player.radius - 2, 3, 8);
-        }
-
-        const cCount = player.cannons;
-        const spread = 0.18;
-        const startA = -((cCount - 1) * spread) / 2;
-
-        for(let i=0; i<cCount; i++) {
-            ctx.save();
-            ctx.rotate(startA + i * spread);
-            ctx.fillStyle = '#1e293b'; ctx.fillRect(0, -5, player.radius + 16 + (chassisLevel * 2), 10);
-            ctx.fillStyle = '#64748b'; ctx.fillRect(0, -3, player.radius + 14 + (chassisLevel * 2), 6);
-            ctx.fillStyle = isFrenzyActive ? `hsl(${(Date.now() / 2) % 360}, 100%, 50%)` : '#38bdf8';
-            ctx.fillRect(player.radius + 10 + (chassisLevel * 2), -4, 5, 8);
-            ctx.restore();
-        }
-
-        let strokeColor = '#0EA5E9';
-        if (selectedTankClass === 'obsidian') strokeColor = '#ef4444';
-        if (selectedTankClass === 'arcane') strokeColor = '#a855f7';
-        if (selectedTankClass === 'devourer') strokeColor = '#10B981';
-        if (isSupremeForm) strokeColor = '#FACC15';
-
-        ctx.fillStyle = '#0b1329';
-        ctx.strokeStyle = strokeColor;
-        ctx.lineWidth = isSupremeForm ? 5 : (selectedSubclass ? 4 : 3);
-
-        if (selectedTankClass === 'obsidian') {
-            ctx.fillStyle = '#450a0a';
-            ctx.beginPath();
-            ctx.moveTo(-12, -player.radius - 14); ctx.lineTo(player.radius + 10, -player.radius - 2); ctx.lineTo(-player.radius, -6); ctx.closePath(); ctx.fill(); ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(-12, player.radius + 14); ctx.lineTo(player.radius + 10, player.radius + 2); ctx.lineTo(-player.radius, 6); ctx.closePath(); ctx.fill(); ctx.stroke();
-        } else if (selectedTankClass === 'arcane') {
-            ctx.fillStyle = '#3b0764';
-            ctx.beginPath();
-            ctx.arc(-8, -player.radius - 10, 10, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-            ctx.beginPath();
-            ctx.arc(-8, player.radius + 10, 10, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-        } else if (selectedTankClass === 'devourer') {
-            ctx.fillStyle = '#064e3b';
-            ctx.beginPath();
-            ctx.moveTo(player.radius + 4, -15); ctx.lineTo(player.radius + 18, -6); ctx.lineTo(player.radius, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(player.radius + 4, 15); ctx.lineTo(player.radius + 18, 6); ctx.lineTo(player.radius, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
-        }
-
-        ctx.fillStyle = '#0f172a';
-        ctx.beginPath();
-        const sides = selectedTankClass === 'obsidian' ? 10 : (selectedTankClass === 'arcane' ? 6 : 8);
-        for (let i = 0; i < sides; i++) {
-            const a = (Math.PI * 2 / sides) * i;
-            const extraSpike = (isSupremeForm && i % 2 === 0) ? 12 : 0;
-            const px = (player.radius + extraSpike) * Math.cos(a);
-            const py = (player.radius + extraSpike) * Math.sin(a);
-            if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-        }
-        ctx.closePath(); ctx.fill(); ctx.stroke();
-
-        const corePulse = Math.sin(Date.now() / 150) * 1.5;
-        const coreRadius = (player.radius * 0.4) + corePulse;
-
-        ctx.save();
-        ctx.shadowColor = strokeColor;
-        ctx.shadowBlur = isSupremeForm ? 30 : 10;
-        ctx.fillStyle = strokeColor;
-        ctx.beginPath(); ctx.arc(0, 0, Math.max(3, coreRadius), 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.2; ctx.stroke();
-        ctx.restore();
-
-        ctx.restore();
 
         playerBullets.forEach(b => { ctx.fillStyle = b.color; ctx.beginPath(); ctx.arc(b.x - camX, b.y - camY, b.radius, 0, Math.PI * 2); ctx.fill(); });
         droneBullets.forEach(db => { ctx.fillStyle = db.color; ctx.beginPath(); ctx.arc(db.x - camX, db.y - camY, db.radius, 0, Math.PI * 2); ctx.fill(); });
@@ -1514,7 +1755,6 @@
             }
 
             ctx.fillStyle = activePowerUp === 'freeze' ? '#93c5fd' : e.color;
-            ctx.beginPath();
 
             if (e.type === 'shooter') {
                 ctx.save(); ctx.translate(e.x - camX, e.y - camY); ctx.rotate(Math.PI / 4);
@@ -1528,284 +1768,43 @@
                 ctx.translate(e.x - camX, e.y - camY);
                 const bAngle = Math.atan2(player.y - e.y, player.x - e.x);
                 ctx.rotate(bAngle);
+                ctx.shadowColor = e.color; ctx.shadowBlur = 25;
 
-                ctx.shadowColor = e.color;
-                ctx.shadowBlur = 25;
-
-                // -------------------------------------------------------------
-                // 1. DRAGÓN TITÁN DE MAGMA (ULTRA DETALLADO CON ALAS ARTICULADAS)
-                // -------------------------------------------------------------
-                if (e.type === 'boss_fire') {
-                    ctx.fillStyle = '#2A0404';
-                    ctx.strokeStyle = '#EF4444';
-                    ctx.lineWidth = 3;
-
-                    // ALAS MEMBRANOSAS GIGANTES ARTICULADAS EN 3 SECCIONES
-                    const wingFlap = Math.sin(e.animTick * 3) * 22;
-                    [-1, 1].forEach(side => {
-                        ctx.beginPath();
-                        ctx.moveTo(-20, side * 25);
-                        ctx.lineTo(40, side * (135 + wingFlap));
-                        ctx.lineTo(-20, side * (165 + wingFlap));
-                        ctx.lineTo(-70, side * (120 + wingFlap));
-                        ctx.lineTo(-90, side * (60 + wingFlap));
-                        ctx.lineTo(-65, side * 30);
-                        ctx.closePath(); ctx.fill(); ctx.stroke();
-
-                        // Huesos/Venas de las alas
-                        ctx.beginPath();
-                        ctx.moveTo(-20, side * 25); ctx.lineTo(-20, side * (165 + wingFlap));
-                        ctx.moveTo(-20, side * 25); ctx.lineTo(-70, side * (120 + wingFlap));
-                        ctx.stroke();
-                    });
-
-                    // COLA CON PÚAS DE MAGMA
-                    ctx.beginPath(); ctx.moveTo(-90, -20); ctx.lineTo(-170, 0); ctx.lineTo(-90, 20); ctx.closePath(); ctx.fill(); ctx.stroke();
-
-                    // CUERPO Y PECHO ENCARNADO
-                    ctx.fillStyle = '#450A0A';
-                    ctx.beginPath();
-                    ctx.moveTo(-100, 0); ctx.lineTo(-45, -55); ctx.lineTo(30, -40); ctx.lineTo(75, 0); ctx.lineTo(30, 40); ctx.lineTo(-45, 55);
-                    ctx.closePath(); ctx.fill(); ctx.stroke();
-
-                    // NÚCLEO DE MAGMA EN EL PECHO
-                    ctx.fillStyle = '#F97316';
-                    ctx.beginPath(); ctx.arc(10, 0, 18, 0, Math.PI * 2); ctx.fill();
-
-                    // CABEZA ESCAMADA CON FAUCES Y DIENTES
-                    ctx.fillStyle = '#7F1D1D';
-                    ctx.beginPath(); ctx.moveTo(50, -30); ctx.lineTo(125, -12); ctx.lineTo(135, 0); ctx.lineTo(125, 12); ctx.lineTo(50, 30); ctx.closePath(); ctx.fill(); ctx.stroke();
-
-                    // DIENTES BLANCOS AFILADOS
-                    ctx.fillStyle = '#FFFFFF';
-                    for(let d = 0; d < 4; d++) {
-                        ctx.fillRect(85 + d * 9, -10, 4, 8);
-                        ctx.fillRect(85 + d * 9, 2, 4, 8);
-                    }
-
-                    // CORONA DE CUERNOS IMPONENTES
-                    ctx.fillStyle = '#F59E0B';
-                    ctx.beginPath(); ctx.moveTo(55, -25); ctx.lineTo(15, -75); ctx.lineTo(35, -20); ctx.closePath(); ctx.fill(); ctx.stroke();
-                    ctx.beginPath(); ctx.moveTo(55, 25); ctx.lineTo(15, 75); ctx.lineTo(35, 20); ctx.closePath(); ctx.fill(); ctx.stroke();
-                }
-
-                // -------------------------------------------------------------
-                // 2. LEVIATÁN ELÉCTRICO COLOSAL (SERPIENTE MARINA DE 8 SEGMENTOS)
-                // -------------------------------------------------------------
-                else if (e.type === 'boss_electric') {
-                    ctx.fillStyle = '#291305';
-                    ctx.strokeStyle = '#FACC15';
-                    ctx.lineWidth = 3;
-
-                    // CUERPO LARGO Y ROBUSTO DE 8 SEGMENTOS ARTICULADOS
-                    for (let i = 8; i >= 1; i--) {
-                        const wave = Math.sin(e.animTick * 2.2 + i * 0.7) * 25;
-                        const segRadius = 38 - (i * 2.8);
+                if (e.type === 'boss_fire') drawDetailedPolygonalDragon(e, '#450A0A', '#EF4444', '#F97316', '#FEF08A');
+                else if (e.type === 'boss_electric') drawColossalLeviathan(e, '#451A03', '#78350F', '#FACC15', '#FEF08A');
+                else if (e.type === 'boss_wind') drawDetailedPolygonalDragon(e, '#064E3B', '#34D399', '#10B981', '#A7F3D0');
+                else if (e.type === 'boss_water') drawColossalLeviathan(e, '#075985', '#0369A1', '#38BDF8', '#E0F2FE');
+                else if (e.type === 'boss_galactic') drawColossalLeviathan(e, '#3B0764', '#581C87', '#C084FC', '#F3E8FF');
+                else if (e.type === 'boss_earth') {
+                    ctx.fillStyle = '#78350F'; ctx.strokeStyle = '#F59E0B'; ctx.lineWidth = 3.5;
+                    const armCount = e.isPhase2 ? 4 : 2;
+                    for(let a=0; a<armCount; a++) {
                         ctx.save();
-                        ctx.translate(-30 - (i * 24), wave);
-                        
-                        // Crestas Dorsales Eléctricas
-                        ctx.fillStyle = '#F59E0B';
-                        ctx.beginPath(); ctx.moveTo(0, -segRadius - 12); ctx.lineTo(10, -segRadius); ctx.lineTo(-10, -segRadius); ctx.closePath(); ctx.fill(); ctx.stroke();
-                        ctx.beginPath(); ctx.moveTo(0, segRadius + 12); ctx.lineTo(10, segRadius); ctx.lineTo(-10, segRadius); ctx.closePath(); ctx.fill(); ctx.stroke();
-
-                        // Segmento Robustecido
-                        ctx.fillStyle = i % 2 === 0 ? '#451A03' : '#78350F';
-                        ctx.beginPath(); ctx.arc(0, 0, segRadius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                        const aAngle = (Math.PI / 2) * a - 0.5;
+                        ctx.rotate(aAngle);
+                        ctx.fillRect(40, -15, 60, 30); ctx.strokeRect(40, -15, 60, 30);
                         ctx.restore();
                     }
-
-                    // CABEZA ANCHA COLOSAL DE LEVIATÁN
-                    ctx.fillStyle = '#78350F';
-                    ctx.beginPath(); ctx.moveTo(10, -50); ctx.lineTo(105, -25); ctx.lineTo(125, 0); ctx.lineTo(105, 25); ctx.lineTo(10, 50); ctx.closePath(); ctx.fill(); ctx.stroke();
-
-                    // CUERNOS Y ANTENAS DE TORMENTA
-                    ctx.fillStyle = '#FEF08A';
-                    ctx.beginPath(); ctx.moveTo(40, -40); ctx.lineTo(120, -75); ctx.lineTo(60, -30); ctx.closePath(); ctx.fill(); ctx.stroke();
-                    ctx.beginPath(); ctx.moveTo(40, 40); ctx.lineTo(120, 75); ctx.lineTo(60, 30); ctx.closePath(); ctx.fill(); ctx.stroke();
-
-                    // OJOS BRILLANTES
-                    ctx.beginPath(); ctx.arc(80, -20, 7, 0, Math.PI * 2); ctx.fill();
-                    ctx.beginPath(); ctx.arc(80, 20, 7, 0, Math.PI * 2); ctx.fill();
-                }
-
-                // -------------------------------------------------------------
-                // 3. DRAGÓN GUADAÑA DEL VIENTO (AERODINÁMICO MULTI-ALA)
-                // -------------------------------------------------------------
-                else if (e.type === 'boss_wind') {
-                    ctx.fillStyle = '#064E3B';
-                    ctx.strokeStyle = '#34D399';
-                    ctx.lineWidth = 3;
-
-                    // 4 ALAS CORTANTES EN FORMA DE GUADAÑA
-                    const wingFlap = Math.cos(e.animTick * 4) * 18;
-                    [-1, 1].forEach(side => {
-                        // Ala Principal
-                        ctx.beginPath(); ctx.moveTo(10, side * 20); ctx.lineTo(95, side * (125 + wingFlap)); ctx.lineTo(-30, side * (155 + wingFlap)); ctx.lineTo(-25, side * 30); ctx.closePath(); ctx.fill(); ctx.stroke();
-                        // Ala Secundaria
-                        ctx.beginPath(); ctx.moveTo(-40, side * 15); ctx.lineTo(30, side * (100 + wingFlap)); ctx.lineTo(-60, side * (120 + wingFlap)); ctx.lineTo(-65, side * 20); ctx.closePath(); ctx.fill(); ctx.stroke();
-                    });
-
-                    // CUERPO HIDRODINÁMICO ESTILIZADO
-                    ctx.beginPath(); ctx.moveTo(-110, -18); ctx.lineTo(20, -30); ctx.lineTo(65, 0); ctx.lineTo(20, 30); ctx.lineTo(-110, 18); ctx.closePath(); ctx.fill(); ctx.stroke();
-
-                    // CABEZA DE DRAGÓN DE VIENTO
-                    ctx.fillStyle = '#047857';
-                    ctx.beginPath(); ctx.moveTo(50, -25); ctx.lineTo(115, 0); ctx.lineTo(50, 25); ctx.closePath(); ctx.fill(); ctx.stroke();
-                }
-
-                // -------------------------------------------------------------
-                // 4. LEVIATÁN ACORAZADO DEL MAR (ROBUSTO CON ESCAMAS SUPERPUESTAS)
-                // -------------------------------------------------------------
-                else if (e.type === 'boss_water') {
-                    ctx.fillStyle = '#0369A1';
-                    ctx.strokeStyle = '#38BDF8';
-                    ctx.lineWidth = 3;
-
-                    // ALETAS DE PROFUNDIDAD LATERALES
-                    [-1, 1].forEach(side => {
-                        ctx.beginPath(); ctx.moveTo(-30, side * 40); ctx.lineTo(-80, side * 110); ctx.lineTo(-90, side * 50); ctx.closePath(); ctx.fill(); ctx.stroke();
-                    });
-
-                    // CUERPO ACORAZADO ROBUSTO
                     ctx.beginPath();
-                    ctx.moveTo(-110, 0); ctx.lineTo(-45, -75); ctx.lineTo(50, -60); ctx.lineTo(90, 0); ctx.lineTo(50, 60); ctx.lineTo(-45, 75);
+                    ctx.moveTo(-75, 0); ctx.lineTo(-50, -55); ctx.lineTo(35, -45); ctx.lineTo(75, 0); ctx.lineTo(35, 45); ctx.lineTo(-50, 55);
                     ctx.closePath(); ctx.fill(); ctx.stroke();
-
-                    // ESCAMAS DORSALES SUPERPUESTAS
-                    for(let s = 0; s < 4; s++) {
-                        ctx.beginPath();
-                        ctx.arc(-50 + s * 30, 0, 25 - s * 3, 0, Math.PI * 2);
-                        ctx.stroke();
-                    }
-
-                    // TENAZAS / MANDÍBULAS MARINAS GIGANTES
-                    [-1, 1].forEach(side => {
-                        ctx.beginPath();
-                        ctx.moveTo(35, side * 45); ctx.lineTo(100, side * 95); ctx.lineTo(135, side * 55); ctx.lineTo(85, side * 35);
-                        ctx.closePath(); ctx.fill(); ctx.stroke();
-                    });
                 }
-
-                // -------------------------------------------------------------
-                // 5. LEVIATÁN CÓSMICO GALÁCTICO (ALARGADO Y TENTACULAR)
-                // -------------------------------------------------------------
-                else if (e.type === 'boss_galactic') {
-                    ctx.fillStyle = '#2E1065';
-                    ctx.strokeStyle = '#C084FC';
-                    ctx.lineWidth = 3;
-
-                    // CUERPO ALARGADO CÓSMICO EN 4 SEGMENTOS
-                    for(let i = 4; i >= 1; i--) {
-                        const pulse = Math.sin(e.animTick * 2 + i) * 10;
-                        ctx.beginPath(); ctx.ellipse(-20 - (i * 30), pulse, 30, 45 - (i * 5), 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-                    }
-
-                    // CABEZA ANCHA Y NÚCLEO
-                    ctx.fillStyle = '#581C87';
-                    ctx.beginPath(); ctx.moveTo(-50, -50); ctx.lineTo(45, -50); ctx.lineTo(85, 0); ctx.lineTo(45, 50); ctx.lineTo(-50, 50); ctx.closePath(); ctx.fill(); ctx.stroke();
-
-                    // TENTÁCULOS ESTELARES ONDULANTES
-                    const tentacleWave = Math.sin(e.animTick * 3) * 20;
-                    for (let i = -5; i <= 5; i++) {
-                        const tLen = 145 + Math.abs(i) * 12;
-                        ctx.fillRect(45, i * 9 - 4, tLen + tentacleWave, 7);
-                        ctx.strokeRect(45, i * 9 - 4, tLen + tentacleWave, 7);
-                    }
-                }
-
-                // -------------------------------------------------------------
-                // 6. TITÁN ESCARABAJO DE ROCA (COLOSAL DE MAGMA Y PIEDRA)
-                // -------------------------------------------------------------
-                else if (e.type === 'boss_earth') {
-                    ctx.fillStyle = '#451A03';
-                    ctx.strokeStyle = '#F59E0B';
-                    ctx.lineWidth = 3.5;
-
-                    // CORAZA GIGANTE POLIGONAL DE TITÁN
-                    ctx.beginPath();
-                    ctx.moveTo(-110, 0); ctx.lineTo(-65, -80); ctx.lineTo(35, -75); ctx.lineTo(75, 0); ctx.lineTo(35, 75); ctx.lineTo(-65, 80);
-                    ctx.closePath(); ctx.fill(); ctx.stroke();
-
-                    // PLACAS DORSALES INTERNAS
-                    ctx.fillStyle = '#78350F';
-                    ctx.beginPath(); ctx.moveTo(-80, 0); ctx.lineTo(-40, -50); ctx.lineTo(20, -45); ctx.lineTo(45, 0); ctx.lineTo(20, 45); ctx.lineTo(-40, 50); ctx.closePath(); ctx.fill(); ctx.stroke();
-
-                    // CABEZA DE TITÁN DE PIEDRA
-                    ctx.fillStyle = '#B45309';
-                    ctx.beginPath(); ctx.moveTo(50, -45); ctx.lineTo(100, 0); ctx.lineTo(50, 45); ctx.closePath(); ctx.fill(); ctx.stroke();
-                }
-
-                // -------------------------------------------------------------
-                // 7. WYVERN DRAGÓN TÓXICO (VUELO IMPREDECIBLE Y AGUIJÓN)
-                // -------------------------------------------------------------
-                else if (e.type === 'boss_toxic') {
-                    ctx.fillStyle = '#3F6212';
-                    ctx.strokeStyle = '#84CC16';
-                    ctx.lineWidth = 3;
-
-                    // ALAS DE WYVERN DE MEMBRANA TÓXICA
-                    const wingFlop = Math.sin(e.animTick * 6) * 18;
-                    [-1, 1].forEach(side => {
-                        ctx.beginPath(); ctx.moveTo(-15, side * 15); ctx.lineTo(75, side * (115 + wingFlop)); ctx.lineTo(-60, side * (95 + wingFlop)); ctx.closePath(); ctx.fill(); ctx.stroke();
-                    });
-
-                    // COLA DE AGUIJÓN VENENOSO
-                    ctx.beginPath(); ctx.moveTo(-80, 0); ctx.lineTo(-140, 0); ctx.lineTo(-160, -15); ctx.stroke();
-
-                    // CUERPO Y CABEZA TÓXICA
-                    ctx.beginPath(); ctx.moveTo(-90, -22); ctx.lineTo(25, -28); ctx.lineTo(65, 0); ctx.lineTo(25, 28); ctx.lineTo(-90, 22); ctx.closePath(); ctx.fill(); ctx.stroke();
-
-                    // HOCICO ÁCIDO CON COLMILLOS
-                    ctx.fillStyle = '#65A30D';
-                    ctx.beginPath(); ctx.moveTo(45, -25); ctx.lineTo(95, 0); ctx.lineTo(45, 25); ctx.closePath(); ctx.fill(); ctx.stroke();
-                }
-
-                // -------------------------------------------------------------
-                // 8. TITÁN DRAGÓN MECHA SOLAR (CIBERNÉTICO COLOSAL)
-                // -------------------------------------------------------------
-                else if (e.type === 'boss_solar') {
-                    ctx.fillStyle = '#1D4ED8';
-                    ctx.strokeStyle = '#F43F5E';
-                    ctx.lineWidth = 4;
-
-                    // ALAS SOLARES FOTÓNICAS
-                    [-1, 1].forEach(side => {
-                        ctx.fillStyle = '#BE185D';
-                        ctx.beginPath(); ctx.moveTo(-20, side * 30); ctx.lineTo(50, side * 135); ctx.lineTo(-70, side * 110); ctx.closePath(); ctx.fill(); ctx.stroke();
-                    });
-
-                    // PECHO NÚCLEO COLOSAL
-                    ctx.fillStyle = '#1D4ED8';
-                    ctx.fillRect(-60, -95, 85, 42); ctx.strokeRect(-60, -95, 85, 42);
-                    ctx.fillRect(-60, 53, 85, 42); ctx.strokeRect(-60, 53, 85, 42);
-
-                    // NÚCLEO SOLAR INTENSO
-                    ctx.fillStyle = '#F59E0B';
-                    ctx.beginPath(); ctx.arc(-5, 0, 25, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-
-                    // CASCO Y CABEZA DE MECHA DRAGÓN
-                    ctx.fillStyle = '#1E40AF';
-                    ctx.fillRect(50, -32, 55, 64); ctx.strokeRect(50, -32, 55, 64);
-
-                    // VISOR DE ENERGÍA FOTÓNICA
-                    ctx.fillStyle = '#FEF08A';
-                    ctx.fillRect(80, -18, 22, 36);
-                }
+                else if (e.type === 'boss_toxic') drawDetailedPolygonalDragon(e, '#14532D', '#84CC16', '#22C55E', '#ECFCCB');
+                else if (e.type === 'boss_omega') drawOmegaShenronBoss(e);
+                else if (e.type === 'boss_shenlong') drawShenlongBoss(e);
 
                 ctx.restore();
             } else if (e.type.startsWith('minion_')) {
                 ctx.save(); ctx.translate(e.x - camX, e.y - camY);
-                ctx.fillStyle = e.color; ctx.beginPath(); ctx.arc(0, 0, e.radius, 0, Math.PI * 2); ctx.fill();
-                ctx.restore();
+                ctx.fillStyle = e.color; ctx.beginPath(); ctx.arc(0, 0, e.radius, 0, Math.PI * 2); ctx.fill(); ctx.restore();
             } else {
-                ctx.arc(e.x - camX, e.y - camY, e.radius, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(e.x - camX, e.y - camY, e.radius, 0, Math.PI * 2); ctx.fill();
             }
 
             if (e.health < e.maxHealth) {
                 const barW = e.radius * 1.6;
                 ctx.fillStyle = '#1e293b'; ctx.fillRect(e.x - camX - barW/2, e.y - camY - e.radius - 16, barW, 6);
-                ctx.fillStyle = '#ef4444'; ctx.fillRect(e.x - camX - barW/2, e.y - camY - e.radius - 16, (e.health / e.maxHealth) * barW, 6);
+                ctx.fillStyle = '#ef4444'; ctx.fillRect(e.x - camX - barW/2, e.y - camY - e.radius - 16, Math.max(0, (e.health / e.maxHealth) * barW), 6);
             }
         });
 
@@ -1835,6 +1834,7 @@
 
     function openShop() {
         inShop = true;
+        updateAdvisorText();
         document.getElementById('shop-gold').innerText = `Créditos: $${gold}`;
         document.getElementById('shop-modal').style.display = 'flex';
         updateShopButtons();
@@ -1848,6 +1848,15 @@
                 btn.disabled = gold < costs[key];
             }
         }
+
+        const turretBtn = document.getElementById('btn-turret-upgrade');
+        if (maxTurretsAllowed >= 4) {
+            turretBtn.disabled = true;
+            document.getElementById('cost-turretLimit').innerText = "MÁXIMO ALCANZADO";
+        } else {
+            document.getElementById('turret-count-label').innerText = `Máx ${maxTurretsAllowed}/4`;
+        }
+
         for (let w = 4; w <= 7; w++) {
             const btn = document.getElementById(`cost-weapon-${w}`).parentElement;
             btn.disabled = unlockedWeapons[w] || gold < weaponCosts[w];
@@ -1868,26 +1877,17 @@
 
     function upgradeChassis() {
         if (gold >= chassisCost && chassisLevel < 5) {
-            gold -= chassisCost;
-            chassisLevel++;
-            player.radius += 3;
-            player.maxHealth += 40;
-            player.health += 40;
-            player.maxShield += 20;
-            player.shield += 20;
-            player.speed += 0.3;
+            gold -= chassisCost; chassisLevel++;
+            player.radius += 3; player.maxHealth += 40; player.health += 40;
+            player.maxShield += 20; player.shield += 20; player.speed += 0.3;
             chassisCost = Math.floor(chassisCost * 1.8);
-
-            updateHUD();
-            document.getElementById('shop-gold').innerText = `Créditos: $${gold}`;
-            updateShopButtons();
+            updateHUD(); document.getElementById('shop-gold').innerText = `Créditos: $${gold}`; updateShopButtons();
         }
     }
 
     function selectClass(className) {
         if(gold >= 600 && !selectedTankClass && chassisLevel >= 3) {
-            gold -= 600;
-            selectedTankClass = className;
+            gold -= 600; selectedTankClass = className;
             if(className === 'obsidian') { 
                 player.damage += 25; player.maxHealth += 80; player.health += 80; 
                 renderSubclasses([
@@ -1909,10 +1909,7 @@
                     { name: 'Cazador Voraz', desc: 'Recupera blindaje por cada baja.' }
                 ]); 
             }
-
-            updateHUD();
-            document.getElementById('shop-gold').innerText = `Créditos: $${gold}`;
-            updateShopButtons();
+            updateHUD(); document.getElementById('shop-gold').innerText = `Créditos: $${gold}`; updateShopButtons();
         }
     }
 
@@ -1921,14 +1918,12 @@
         container.innerHTML = '';
         subclassList.forEach(sub => {
             const card = document.createElement('div');
-            card.className = 'tree-card';
-            card.style.borderColor = '#38bdf8';
+            card.className = 'tree-card'; card.style.borderColor = '#38bdf8';
             card.innerHTML = `
                 <span style="color:#38bdf8; font-weight:bold; font-size:14px;">${sub.name}</span>
                 <span class="desc-text">${sub.desc}</span>
                 <button class="shop-btn" style="border-color:#38bdf8; width:100%; margin-top:5px;" onclick="selectSubclass('${sub.name}')">
-                    <span>Especializar</span>
-                    <span style="color:#f59e0b;">$800</span>
+                    <span>Especializar</span><span style="color:#f59e0b;">$800</span>
                 </button>
             `;
             container.appendChild(card);
@@ -1937,49 +1932,43 @@
 
     function selectSubclass(name) {
         if(gold >= 800 && !selectedSubclass && chassisLevel >= 4) {
-            gold -= 800;
-            selectedSubclass = name;
-            player.damage += 35;
-            player.maxShield += 40; player.shield += 40;
-
-            updateHUD();
-            document.getElementById('shop-gold').innerText = `Créditos: $${gold}`;
-            updateShopButtons();
+            gold -= 800; selectedSubclass = name;
+            player.damage += 35; player.maxShield += 40; player.shield += 40;
+            updateHUD(); document.getElementById('shop-gold').innerText = `Créditos: $${gold}`; updateShopButtons();
         }
     }
 
     function unlockSupremeForm() {
         if(gold >= 1500 && !isSupremeForm && chassisLevel >= 5) {
-            gold -= 1500;
-            isSupremeForm = true;
-            player.cannons += 2;
-            player.damage += 70;
-            player.speed += 1.2;
-
-            updateHUD();
-            document.getElementById('shop-gold').innerText = `Créditos: $${gold}`;
-            updateShopButtons();
+            gold -= 1500; isSupremeForm = true;
+            player.cannons += 2; player.damage += 70; player.speed += 1.2;
+            updateHUD(); document.getElementById('shop-gold').innerText = `Créditos: $${gold}`; updateShopButtons();
         }
     }
 
     function buyUpgrade(type) {
         if (gold >= costs[type]) {
-            gold -= costs[type];
-            if (type === 'damage') player.damage += 15;
-            if (type === 'fireRate') player.fireRate = Math.max(80, player.fireRate - 20);
-            if (type === 'speed') player.speed += 0.4;
-            if (type === 'heal') { player.health = Math.min(player.maxHealth, player.health + 60); player.shield = player.maxShield; }
-            if (type === 'maxHp') { player.maxHealth += 40; player.health += 40; player.maxShield += 20; player.shield += 20; }
-            if (type === 'multishot') player.cannons++;
-            if (type === 'addDrone') player.droneCount++;
-            if (type === 'globalMagnet') hasGlobalMagnet = true;
-            if (type === 'spikes') {
-                spikeLevel++;
-                spikeDamage += 18;
-                document.getElementById('spikes-desc').innerText = `Espinas Nivel ${spikeLevel} (Daño: ${spikeDamage}/seg)`;
+            if (type === 'turretLimit') {
+                if (maxTurretsAllowed >= 4) return;
+                gold -= costs[type];
+                maxTurretsAllowed++;
+                costs[type] = Math.floor(costs[type] * 1.6);
+            } else {
+                gold -= costs[type];
+                if (type === 'damage') player.damage += 15;
+                if (type === 'fireRate') player.fireRate = Math.max(80, player.fireRate - 20);
+                if (type === 'speed') player.speed += 0.4;
+                if (type === 'heal') { player.health = Math.min(player.maxHealth, player.health + 60); player.shield = player.maxShield; }
+                if (type === 'maxHp') { player.maxHealth += 40; player.health += 40; player.maxShield += 20; player.shield += 20; }
+                if (type === 'addDrone') player.droneCount++;
+                if (type === 'globalMagnet') hasGlobalMagnet = true;
+                if (type === 'spikes') {
+                    spikeLevel++; spikeDamage += 18;
+                    document.getElementById('spikes-desc').innerText = `Espinas Nivel ${spikeLevel} (Daño: ${spikeDamage}/seg)`;
+                }
+                costs[type] = Math.floor(costs[type] * 1.45);
             }
 
-            costs[type] = Math.floor(costs[type] * 1.45);
             if(type !== 'globalMagnet') {
                 const btnEl = document.getElementById(`cost-${type}`);
                 if(btnEl) btnEl.innerText = `$${costs[type]}`;
@@ -1987,21 +1976,16 @@
                 document.getElementById('cost-globalMagnet').innerText = "¡COMPRADO!";
             }
 
-            updateHUD();
-            document.getElementById('shop-gold').innerText = `Créditos: $${gold}`;
-            updateShopButtons();
+            updateHUD(); document.getElementById('shop-gold').innerText = `Créditos: $${gold}`; updateShopButtons();
         }
     }
 
     function buyWeapon(w) {
         if (gold >= weaponCosts[w] && !unlockedWeapons[w]) {
-            gold -= weaponCosts[w];
-            unlockedWeapons[w] = true;
+            gold -= weaponCosts[w]; unlockedWeapons[w] = true;
             document.getElementById(`w-${w}`).classList.remove('locked');
-            switchWeapon(w);
-            updateHUD();
-            document.getElementById('shop-gold').innerText = `Créditos: $${gold}`;
-            updateShopButtons();
+            switchWeapon(w); updateHUD();
+            document.getElementById('shop-gold').innerText = `Créditos: $${gold}`; updateShopButtons();
         }
     }
 
@@ -2010,8 +1994,7 @@
     }
 
     function endGame() {
-        gameOver = true;
-        checkHighScore();
+        gameOver = true; checkHighScore();
         document.getElementById('final-stats').innerText = `Sobreviviste hasta la Oleada ${wave} con ${selectedSubclass || selectedTankClass || chassisNames[chassisLevel - 1]}`;
         document.getElementById('game-over-modal').style.display = 'flex';
     }
@@ -2019,18 +2002,20 @@
     function restartGame() {
         gameOver = false; wave = 1; gold = 0; killsForFrenzy = 0; isFrenzyActive = false; activePowerUp = null;
         hasGlobalMagnet = false; selectedTankClass = null; selectedSubclass = null; isSupremeForm = false;
-        spikeLevel = 0; spikeDamage = 0; chassisLevel = 1; chassisCost = 200;
+        spikeLevel = 0; spikeDamage = 0; chassisLevel = 1; chassisCost = 200; maxTurretsAllowed = 1;
         shockwaveKills = 0; isShockwaveReady = false; activeShockwaves = [];
-        costs = { damage: 75, fireRate: 85, speed: 65, heal: 50, maxHp: 90, multishot: 250, addDrone: 180, globalMagnet: 500, spikes: 180 };
+        costs = { damage: 75, fireRate: 85, speed: 65, heal: 50, maxHp: 90, turretLimit: 250, addDrone: 180, globalMagnet: 500, spikes: 180 };
         document.getElementById('spikes-desc').innerText = "Daña a enemigos cercanos al contacto";
         player.health = 100; player.maxHealth = 100; player.shield = 50; player.maxShield = 50;
-        player.damage = 30; player.fireRate = 220; player.speed = 3.5; player.cannons = 1;
-        player.droneCount = 0; player.droneDamage = 10; player.radius = 20; player.x = 0; player.y = 0;
+        player.damage = 30; player.fireRate = 220; player.speed = 4.2; player.cannons = 1;
+        player.droneCount = 0; player.droneDamage = 10; player.radius = 24; player.x = 0; player.y = 0;
         unlockedWeapons = { 1: true, 2: true, 3: true, 4: false, 5: false, 6: false, 7: false };
         for(let w=4; w<=7; w++) document.getElementById(`w-${w}`).classList.add('locked');
         switchWeapon(1);
         playerBullets = []; heavyProjectiles = []; blackHoles = []; droneBullets = []; turretBullets = []; enemyBullets = []; enemies = []; particles = []; mines = []; powerUps = []; meteorWarnings = []; droppedCoins = [];
-        document.getElementById('game-over-modal').style.display = 'none'; startWave();
+        document.getElementById('game-over-modal').style.display = 'none';
+        applyRebirthPermanentStats();
+        startWave();
     }
 
     checkHighScore();
