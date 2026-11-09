@@ -4,165 +4,81 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>BlockNite 2D - Super Shenron Multijugador</title>
+    
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Rajdhani:wght@500;600;700&display=swap">
+    
+    <!-- LIBRERÍAS DE FIREBASE PARA EL MULTIJUGADOR -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <style>
-        :root {
-            --bg: #060912;
-            --panel: rgba(10,15,30,.78);
-            --line: rgba(120,170,255,.18);
-            --cyan: #3be3ff;
-            --gold: #ffc24a;
-            --red: #ff4d6a;
-            --green: #35f2a0;
-            --violet: #b07bff;
-            --text: #e8f0ff;
-            --mute: #8da0c4;
-            --disp: 'Chakra Petch', 'Segoe UI', sans-serif;
-            --body: 'Rajdhani', 'Segoe UI', sans-serif;
-        }
+:root{--bg:#060912;--panel:rgba(10,15,30,.78);--line:rgba(120,170,255,.18);--cyan:#3be3ff;--gold:#ffc24a;--red:#ff4d6a;--green:#35f2a0;--violet:#b07bff;--text:#e8f0ff;--mute:#8da0c4;
+--disp:'Chakra Petch','Segoe UI',sans-serif;--body:'Rajdhani','Segoe UI',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0;user-select:none}
+html,body{height:100%}
+body{background:#050914;color:#edf5ff;font-family:var(--body);letter-spacing:.2px;overflow:hidden}
+#game-container{position:relative;width:100vw;height:100vh;isolation:isolate}
+canvas{display:block;background:var(--bg);cursor:crosshair}
+.hud-panel{position:absolute;padding:12px 16px;background:linear-gradient(145deg,rgba(11,20,42,.88),rgba(5,10,24,.82));border:1px solid rgba(102,190,255,.28);border-radius:12px;backdrop-filter:blur(16px);box-shadow:0 12px 38px rgba(0,0,0,.42),inset 0 1px rgba(255,255,255,.06);pointer-events:none}
+#top-left-hud{top:16px;left:16px;display:flex;flex-direction:column;gap:5px;width:270px;border-left:3px solid var(--cyan)}
+#top-right-hud{top:16px;right:16px;text-align:right;border-right:3px solid var(--red)}
+#highscore-hud{top:16px;left:50%;transform:translateX(-50%);text-align:center;min-width:170px;padding:6px 14px}
+#highscore-hud div:first-child{font-size:11px;color:var(--mute);letter-spacing:1px}
+#best-score-text{font-family:var(--disp);font-size:14px!important;color:var(--gold)!important}
+.hud-title{font-family:var(--disp);font-size:19px;font-weight:700;color:var(--cyan);letter-spacing:2.5px;text-shadow:0 0 18px rgba(59,227,255,.3)}
+#wave-text{font-size:24px;color:var(--red)!important;text-shadow:0 0 14px rgba(255,77,106,.6)}
+.stat-label{font-size:13px;font-weight:700;display:flex;justify-content:space-between;letter-spacing:.4px}
+.bar-container{width:100%;height:10px;background:rgba(255,255,255,.08);border-radius:20px;overflow:hidden;border:1px solid var(--line)}
+.bar-fill{height:100%;transition:width .12s linear;border-radius:20px;box-shadow:0 0 10px currentColor}
+#shield-fill{background:linear-gradient(90deg,#17a8d6,var(--cyan));color:var(--cyan)}
+#health-fill{background:linear-gradient(90deg,#c9223f,#ff6b86);color:var(--red)}
+#frenzy-fill{background:linear-gradient(90deg,#e08a00,var(--gold));color:var(--gold)}
+#shockwave-fill{background:linear-gradient(90deg,#12b87a,var(--green));color:var(--green)}
+#world-event-widget{position:absolute;top:105px;left:50%;transform:translateX(-50%);background:rgba(10,16,34,.86);border:1px solid rgba(255,194,74,.45);padding:6px 18px;font-family:var(--disp);font-size:12px;color:var(--gold);display:flex;align-items:center;gap:10px;z-index:7;border-radius:30px;backdrop-filter:blur(14px)}
+#raid-timer-display{color:var(--cyan)!important;font-size:15px!important}
+#weapon-selector{position:absolute;bottom:112px;left:50%;transform:translateX(-50%);display:flex;gap:5px;flex-wrap:wrap;justify-content:center;max-width:760px;z-index:9;padding:9px;background:rgba(5,10,24,.82);border:1px solid rgba(59,227,255,.22);border-radius:14px;backdrop-filter:blur(14px);transition:opacity .2s,transform .2s}
+#weapon-selector.arsenal-hidden{opacity:0;pointer-events:none;transform:translate(-50%,12px)}
+#arsenal-toggle{position:absolute;z-index:10;bottom:102px;left:50%;transform:translateX(-50%);border:1px solid rgba(59,227,255,.4);border-radius:30px;padding:8px 18px;background:rgba(8,16,35,.92);color:#9ceeff;font:700 12px var(--disp);letter-spacing:1.5px;cursor:pointer;box-shadow:0 5px 22px rgba(0,0,0,.35)}
+#arsenal-toggle:hover{background:rgba(59,227,255,.18);color:white}
+.weapon-btn{padding:8px 12px;background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:9px;color:var(--mute);font:600 12px var(--body);cursor:pointer;transition:all .15s}
+.weapon-btn:hover:not(.locked){color:var(--text);transform:translateY(-2px)}
+.weapon-btn.active{border-color:var(--cyan);color:var(--cyan);background:rgba(59,227,255,.17);box-shadow:0 0 18px rgba(59,227,255,.18)}
+.weapon-btn.locked{opacity:.35;cursor:not-allowed}
+#bottom-hud{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:9px;align-items:center}
+.skill-box{position:relative!important;display:flex;flex-direction:column;align-items:center;justify-content:center;width:72px;height:72px;padding:6px;overflow:hidden;border-radius:13px!important;background:rgba(8,15,32,.88)!important;border-color:var(--cyan)!important;box-shadow:0 8px 24px rgba(0,0,0,.32)}
+.skill-key{font-family:var(--disp);font-size:11px;font-weight:700;color:var(--cyan)}
+.skill-name{font-size:10px;font-weight:700;color:var(--text);text-align:center;margin-top:3px;line-height:1.1}
+.skill-overlay{position:absolute;bottom:0;left:0;width:100%;height:0%;background:rgba(0,0,0,.72);transition:height .1s linear}
+#frenzy-banner,#powerup-banner{position:absolute;left:50%;transform:translate(-50%,-50%) scale(0);font-family:var(--disp);font-weight:700;letter-spacing:3px;pointer-events:none;transition:transform .3s cubic-bezier(.2,1.4,.4,1);z-index:5;white-space:nowrap}
+#frenzy-banner{top:24%;font-size:34px;color:var(--gold);text-shadow:0 0 24px var(--gold),0 0 50px var(--red)}
+#powerup-banner{top:30%;font-size:22px;color:var(--cyan);text-shadow:0 0 16px var(--cyan)}
+#frenzy-banner.active,#powerup-banner.active{transform:translate(-50%,-50%) scale(1)}
+#multiplayer-modal,#shop-modal,#game-over-modal,#rebirth-modal{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(20,35,80,.9),rgba(4,6,14,.97));display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:10}
+.modal-content{background:linear-gradient(145deg,rgba(12,21,44,.98),rgba(5,10,24,.98));border:1px solid rgba(59,227,255,.5);border-radius:18px;padding:26px;max-width:880px;width:95%;text-align:center;box-shadow:0 25px 90px rgba(0,0,0,.65),0 0 45px rgba(59,227,255,.1);max-height:92vh;overflow-y:auto}
+.modal-content h2{font-family:var(--disp);letter-spacing:2px}
+.modal-content h3{font-family:var(--disp);letter-spacing:1px}
+.shop-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:14px 0}
+.shop-btn,.action-btn{background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:11px;color:var(--text);padding:11px;cursor:pointer;font:700 14px var(--body);transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:4px}
+.shop-btn:hover:not(:disabled),.action-btn:hover{background:var(--cyan);color:#06101c;transform:translateY(-2px);box-shadow:0 6px 20px rgba(59,227,255,.3);border-color:var(--cyan)}
+.shop-btn:hover:not(:disabled) span{color:#06101c!important}
+.shop-btn:disabled{opacity:.35;cursor:not-allowed}
+.action-btn{width:100%;margin-top:12px;background:linear-gradient(90deg,#12b87a,var(--green));border:none;color:#04150e;font-family:var(--disp);font-size:16px;letter-spacing:2px;padding:14px}
+#radar-container{position:absolute;bottom:16px;right:16px;width:170px;height:170px;border:1px solid var(--cyan);border-radius:50%;background:radial-gradient(circle,rgba(59,227,255,.1),rgba(6,9,18,.9));overflow:hidden;pointer-events:none;box-shadow:0 0 30px rgba(59,227,255,.16)}
+#radar{width:100%;height:100%}
+.tree-card{border:1px solid var(--line);border-radius:12px;padding:12px;background:rgba(255,255,255,.035);display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center}
+.desc-text{font-size:13px;color:var(--mute);line-height:1.25;font-weight:500}
+.advisor-box{background:rgba(59,227,255,.07);border-left:3px solid var(--cyan);padding:10px 12px;font-size:14px;color:var(--cyan);margin-bottom:12px;text-align:left}
+#raid-alert-modal{position:absolute;top:110px;left:50%;transform:translateX(-50%) scale(0);background:rgba(10,15,30,.97);border:1px solid var(--gold);border-radius:16px;padding:18px;text-align:center;width:350px;box-shadow:0 0 40px rgba(255,194,74,.4);z-index:20;transition:transform .3s cubic-bezier(.2,1.4,.4,1);backdrop-filter:blur(18px)}
+#raid-alert-modal.active{transform:translateX(-50%) scale(1)}
+.raid-btn{padding:8px 16px;border-radius:3px;font:700 13px var(--disp);cursor:pointer;border:none}
+.raid-accept{background:var(--gold);color:#111}.raid-decline{background:var(--red);color:#fff}
 
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        html, body { height: 100%; width: 100%; overflow: hidden; background: #050914; color: #edf5ff; font-family: var(--body); }
+/* ESTILOS MULTIJUGADOR */
+.mp-input{background:rgba(255,255,255,.08);border:1px solid var(--cyan);padding:10px;border-radius:8px;color:#fff;font-family:var(--disp);font-size:16px;text-align:center;width:200px;margin-bottom:10px}
+.mp-status{font-size:13px;color:var(--cyan);margin-top:8px}
 
-        #game-container { position: relative; width: 100vw; height: 100vh; isolation: isolate; }
-        canvas { display: block; background: var(--bg); cursor: crosshair; }
-
-        .hud-panel {
-            position: absolute;
-            padding: 12px 16px;
-            background: linear-gradient(145deg, rgba(11,20,42,.88), rgba(5,10,24,.82));
-            border: 1px solid rgba(102,190,255,.28);
-            border-radius: 12px;
-            backdrop-filter: blur(16px);
-            box-shadow: 0 12px 38px rgba(0,0,0,.42), inset 0 1px rgba(255,255,255,.06);
-            pointer-events: none;
-        }
-
-        #top-left-hud { top: 16px; left: 16px; display: flex; flex-direction: column; gap: 5px; width: 270px; border-left: 3px solid var(--cyan); }
-        #top-right-hud { top: 16px; right: 16px; text-align: right; border-right: 3px solid var(--red); }
-        #highscore-hud { top: 16px; left: 50%; transform: translateX(-50%); text-align: center; min-width: 170px; padding: 6px 14px; }
-        
-        .hud-title { font-family: var(--disp); font-size: 19px; font-weight: 700; color: var(--cyan); letter-spacing: 2.5px; text-shadow: 0 0 18px rgba(59,227,255,.3); }
-        #wave-text { font-size: 22px; color: var(--red) !important; text-shadow: 0 0 14px rgba(255,77,106,.6); }
-
-        .stat-label { font-size: 13px; font-weight: 700; display: flex; justify-content: space-between; letter-spacing: .4px; }
-        .bar-container { width: 100%; height: 10px; background: rgba(255,255,255,.08); border-radius: 20px; overflow: hidden; border: 1px solid var(--line); }
-        .bar-fill { height: 100%; border-radius: 20px; transition: width .12s linear; box-shadow: 0 0 10px currentColor; }
-        
-        #shield-fill { background: linear-gradient(90deg,#17a8d6,var(--cyan)); color: var(--cyan); }
-        #health-fill { background: linear-gradient(90deg,#c9223f,#ff6b86); color: var(--red); }
-        #frenzy-fill { background: linear-gradient(90deg,#e08a00,var(--gold)); color: var(--gold); }
-        #shockwave-fill { background: linear-gradient(90deg,#12b87a,var(--green)); color: var(--green); }
-
-        #world-event-widget {
-            position: absolute; top: 105px; left: 50%; transform: translateX(-50%);
-            background: rgba(10,16,34,.86); backdrop-filter: blur(14px);
-            border: 1px solid rgba(255,194,74,.45); padding: 8px 22px; border-radius: 30px;
-            font-family: var(--disp); font-size: 13px; color: var(--gold);
-            display: flex; align-items: center; gap: 10px; z-index: 7;
-        }
-
-        #weapon-selector {
-            position: absolute; bottom: 112px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; max-width: 760px; z-index: 9;
-            padding: 9px; background: rgba(5,10,24,.82); border: 1px solid rgba(59,227,255,.22);
-            border-radius: 14px; backdrop-filter: blur(14px); transition: opacity .2s, transform .2s;
-        }
-        #weapon-selector.arsenal-hidden { opacity: 0; pointer-events: none; transform: translate(-50%, 12px); }
-
-        #arsenal-toggle {
-            position: absolute; z-index: 10; bottom: 102px; left: 50%; transform: translateX(-50%);
-            border: 1px solid rgba(59,227,255,.4); border-radius: 30px; padding: 8px 18px;
-            background: rgba(8,16,35,.92); color: #9ceeff; font: 700 12px var(--disp); letter-spacing: 1.5px;
-            cursor: pointer; box-shadow: 0 5px 22px rgba(0,0,0,.35);
-        }
-        #arsenal-toggle:hover { background: rgba(59,227,255,.18); color: #fff; }
-
-        .weapon-btn {
-            padding: 8px 12px; background: rgba(255,255,255,.045); border: 1px solid var(--line);
-            border-radius: 9px; color: var(--mute); font: 600 12px var(--body); cursor: pointer; transition: all .15s;
-        }
-        .weapon-btn:hover:not(.locked) { color: var(--text); transform: translateY(-2px); }
-        .weapon-btn.active { border-color: var(--cyan); color: var(--cyan); background: rgba(59,227,255,.17); box-shadow: 0 0 18px rgba(59,227,255,.18); }
-        .weapon-btn.locked { opacity: .35; cursor: not-allowed; }
-
-        #bottom-hud { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 9px; align-items: center; }
-        .skill-box {
-            position: relative !important; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            width: 72px; height: 72px; padding: 6px; overflow: hidden; border-radius: 13px !important;
-            background: rgba(8,15,32,.88) !important; border-color: var(--cyan) !important; box-shadow: 0 8px 24px rgba(0,0,0,.32);
-        }
-        .skill-key { font-family: var(--disp); font-size: 11px; font-weight: 700; color: var(--cyan); }
-        .skill-name { font-size: 10px; font-weight: 700; color: var(--text); text-align: center; margin-top: 3px; line-height: 1.1; }
-        .skill-overlay { position: absolute; bottom: 0; left: 0; width: 100%; height: 0%; background: rgba(0,0,0,.72); transition: height .1s linear; }
-
-        #frenzy-banner, #powerup-banner {
-            position: absolute; left: 50%; transform: translate(-50%,-50%) scale(0);
-            font-family: var(--disp); font-weight: 700; letter-spacing: 3px; pointer-events: none;
-            transition: transform .3s cubic-bezier(.2,1.4,.4,1); z-index: 5; white-space: nowrap;
-        }
-        #frenzy-banner { top: 24%; font-size: 34px; color: var(--gold); text-shadow: 0 0 24px var(--gold), 0 0 50px var(--red); }
-        #powerup-banner { top: 30%; font-size: 22px; color: var(--cyan); text-shadow: 0 0 16px var(--cyan); }
-        #frenzy-banner.active, #powerup-banner.active { transform: translate(-50%,-50%) scale(1); }
-
-        #shop-modal, #game-over-modal, #rebirth-modal, #multiplayer-lobby {
-            position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 30%,rgba(20,35,80,.9),rgba(4,6,14,.97));
-            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10;
-        }
-        .modal-content {
-            background: linear-gradient(145deg,rgba(12,21,44,.98),rgba(5,10,24,.98)); border: 1px solid rgba(59,227,255,.5);
-            border-radius: 18px; padding: 26px; max-width: 880px; width: 95%; text-align: center;
-            box-shadow: 0 25px 90px rgba(0,0,0,.65), 0 0 45px rgba(59,227,255,.1); max-height: 92vh; overflow-y: auto; scrollbar-width: thin;
-        }
-        .modal-content h2 { font-family: var(--disp); letter-spacing: 2px; }
-
-        .shop-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap: 10px; margin: 14px 0; }
-        .shop-btn, .action-btn {
-            background: rgba(255,255,255,.045); border: 1px solid var(--line); color: var(--text); padding: 11px;
-            border-radius: 11px; cursor: pointer; font: 700 14px var(--body); transition: all .15s;
-            display: flex; flex-direction: column; align-items: center; gap: 4px;
-        }
-        .shop-btn:hover:not(:disabled), .action-btn:hover { background: var(--cyan); color: #06101c; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59,227,255,.3); }
-        .shop-btn:hover:not(:disabled) span { color: #06101c !important; }
-        .shop-btn:disabled { opacity: .35; cursor: not-allowed; }
-        
-        .action-btn {
-            width: 100%; margin-top: 12px; background: linear-gradient(90deg,#12b87a,var(--green)); border: none;
-            color: #04150e; font-family: var(--disp); font-size: 16px; letter-spacing: 2px; padding: 14px;
-        }
-
-        #radar-container {
-            position: absolute; bottom: 16px; right: 16px; width: 170px; height: 170px;
-            border: 1px solid var(--cyan); border-radius: 50%; background: radial-gradient(circle,rgba(59,227,255,.1),rgba(6,9,18,.9));
-            overflow: hidden; pointer-events: none; box-shadow: 0 0 30px rgba(59,227,255,.16);
-        }
-        #radar { width: 100%; height: 100%; }
-
-        .tree-card { border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: rgba(255,255,255,.035); display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center; }
-        .desc-text { font-size: 13px; color: var(--mute); line-height: 1.25; font-weight: 500; }
-        .advisor-box { background: rgba(59,227,255,.07); border-left: 3px solid var(--cyan); padding: 10px 12px; font-size: 14px; color: var(--cyan); margin-bottom: 12px; text-align: left; }
-
-        #raid-alert-modal {
-            position: absolute; top: 110px; left: 50%; transform: translateX(-50%) scale(0);
-            background: rgba(10,15,30,.97); border: 1px solid var(--gold); border-radius: 16px; padding: 18px;
-            text-align: center; width: 360px; box-shadow: 0 0 40px rgba(255,194,74,.4); z-index: 20;
-            backdrop-filter: blur(18px); transition: transform .3s cubic-bezier(.2,1.4,.4,1);
-        }
-        #raid-alert-modal.active { transform: translateX(-50%) scale(1); }
-        .raid-btn { padding: 8px 16px; border-radius: 6px; font: 700 13px var(--disp); cursor: pointer; border: none; }
-        .raid-accept { background: var(--gold); color: #111; }
-        .raid-decline { background: var(--red); color: #fff; }
-
-        /* Estilos Lector Multijugador */
-        .mp-input { width: 100%; padding: 12px; margin: 10px 0; background: rgba(0,0,0,.5); border: 1px solid var(--cyan); color: #fff; font-family: var(--disp); border-radius: 8px; text-align: center; font-size: 16px; }
-        #mp-status { font-size: 13px; color: var(--cyan); margin-top: 6px; }
-        #mp-players-list { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 10px 0; }
-        .mp-tag { background: rgba(59,227,255,.2); border: 1px solid var(--cyan); padding: 4px 10px; border-radius: 20px; font-size: 12px; color: var(--cyan); }
-
-        @media(max-width:900px){
-            #radar-container { display:none } #weapon-selector { bottom: 155px; max-width: 95vw; }
-            #arsenal-toggle { bottom: 105px; } #bottom-hud { gap: 4px; } .skill-box { width: 54px; height: 58px; padding: 4px; } .skill-name { font-size: 8px; }
-        }
+@media(max-width:900px){#radar-container{display:none}#weapon-selector{bottom:155px;max-width:95vw}#arsenal-toggle{bottom:105px}#bottom-hud{gap:4px}.skill-box{width:54px;height:58px;padding:4px}.skill-name{font-size:8px}}
+@media(max-width:560px){#top-left-hud{width:185px;font-size:11px}#top-right-hud{top:16px}#bottom-hud{left:50%;width:96%;justify-content:center}.skill-box{width:48px;height:52px}.skill-key{font-size:9px}#raid-alert-modal{width:90%}.modal-content{padding:16px;width:96%}.shop-grid{grid-template-columns:1fr!important}}
     </style>
 </head>
 <body>
@@ -170,24 +86,41 @@
 <div id="game-container">
     <canvas id="gameCanvas"></canvas>
 
+    <!-- MODAL MULTIJUGADOR INICIAL -->
+    <div id="multiplayer-modal">
+        <div class="modal-content" style="max-width: 450px;">
+            <h2 style="color:#38bdf8; font-size:26px;">🐉 MULTIJUGADOR BLOCKNITE</h2>
+            <p style="color:#94a3b8; font-size:13px; margin: 10px 0;">Únete a una sala en tiempo real para derrotar a Super Shenron junto a tus aliados.</p>
+
+            <button class="action-btn" onclick="createMultiplayerRoom()">CREAR SALA NUEVA</button>
+            <div style="margin: 15px 0; color:#64748b;">— O —</div>
+            
+            <input type="text" id="room-code-input" class="mp-input" placeholder="CÓDIGO DE SALA" maxlength="6">
+            <button class="action-btn" style="background:#38bdf8; color:#04150e;" onclick="joinMultiplayerRoom()">UNIRSE A SALA</button>
+
+            <button class="action-btn" style="background:transparent; border:1px solid #64748b; color:#94a3b8; margin-top:20px;" onclick="startSinglePlayer()">JUGAR EN SOLITARIO</button>
+            
+            <div id="mp-status-text" class="mp-status"></div>
+        </div>
+    </div>
+
     <div id="world-event-widget">
         <span>🐉 INCURSIÓN MUNDIAL EN:</span>
-        <span id="raid-timer-display" style="color:#38bdf8; font-size:14px;">02:30</span>
-        <span id="raid-players-count" style="color:#10B981; margin-left: 8px; display:none;">👥 1</span>
+        <span id="raid-timer-display">05:00</span>
     </div>
 
     <div id="raid-alert-modal">
         <h3 style="color:#f59e0b; font-size:16px; margin-bottom:6px;">🐉 ¡ALERTA DE INCURSIÓN DIVINA!</h3>
-        <p style="font-size:12px; color:#cbd5e1; margin-bottom:12px;">Shenlong ha descendido. Entra al modo multijugador para luchar en equipo.</p>
+        <p style="font-size:12px; color:#cbd5e1; margin-bottom:12px;">Shenlong ha descendido. ¿Deseas iniciar la batalla que despertará a Super Shenron?</p>
         <div style="display:flex; justify-content:center; gap:10px;">
-            <button class="raid-btn raid-accept" onclick="openMultiplayerLobby()">¡INCURSIÓN MULTIJUGADOR!</button>
-            <button class="raid-btn raid-decline" onclick="declineRaid()">SOLO</button>
+            <button class="raid-btn raid-accept" onclick="acceptRaid()">¡DESAFIAR A SHENLONG!</button>
+            <button class="raid-btn raid-decline" onclick="declineRaid()">RECHAZAR</button>
         </div>
     </div>
 
     <div id="highscore-hud" class="hud-panel">
-        <div style="font-size: 11px; color: #94a3b8; font-weight: bold;">MÁXIMO RÉCORD</div>
-        <div id="best-score-text" style="font-size: 15px; font-weight: 800; color: #f59e0b;">Oleada Máxima: 1</div>
+        <div>MÁXIMO RÉCORD</div>
+        <div id="best-score-text">Oleada Máxima: 1</div>
     </div>
 
     <button id="arsenal-toggle" type="button" onclick="toggleArsenal()">☷ ARMAMENTO</button>
@@ -222,6 +155,7 @@
         
         <div class="stat-label" style="margin-top:4px; color:#f59e0b;"><span>Créditos</span><span id="gold-text">$0</span></div>
         <div class="stat-label" style="color:#a855f7;"><span>Chasis</span><span id="evo-text">Mk. I (Reconocimiento)</span></div>
+        <div class="stat-label" style="color:#38bdf8; margin-top:2px;" id="room-display-hud"><span>Sala MP:</span><span>SOLITARIO</span></div>
     </div>
 
     <div id="top-right-hud" class="hud-panel">
@@ -259,23 +193,6 @@
     </div>
 
     <div id="radar-container"><canvas id="radar"></canvas></div>
-
-    <!-- Lobby Multijugador -->
-    <div id="multiplayer-lobby" style="display:none;">
-        <div class="modal-content" style="max-width: 500px;">
-            <h2 style="color:#f59e0b; font-size:24px;">🐉 INCURSIÓN MULTIJUGADOR</h2>
-            <p style="font-size:12px; color:#cbd5e1; margin-top:6px;">Lucha en tiempo real contra Shenlong y Super Shenron junto a otros pilotos.</p>
-            
-            <input type="text" id="room-id-input" class="mp-input" placeholder="Nombre o Código de Sala (Ej: RAID123)" value="RAID-SHENRON">
-            <input type="text" id="player-name-input" class="mp-input" placeholder="Tu Nombre de Piloto" value="PilotoAlfa">
-
-            <div id="mp-players-list"></div>
-            <div id="mp-status">Esperando conexión...</div>
-
-            <button class="action-btn" style="background:#f59e0b; color:#111;" onclick="joinMultiplayerRoom()">CONECTAR Y ENTRAR A SALA</button>
-            <button class="action-btn" style="background:transparent; border:1px solid #64748b; color:#94a3b8; margin-top:6px;" onclick="closeMultiplayerLobby()">CANCELAR</button>
-        </div>
-    </div>
 
     <div id="shop-modal" style="display:none;">
         <div class="modal-content">
@@ -423,155 +340,106 @@
     </div>
 </div>
 
-<!-- Configuración de Firebase Firestore para Sincronizar Incursión Multijugador -->
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, onSnapshot, collection, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'blocknite-raid-app';
-    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-        apiKey: "demo-key", authDomain: "demo.firebaseapp.com", projectId: "demo-project"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    window.mpState = {
-        active: false,
-        user: null,
-        roomId: "RAID-SHENRON",
-        playerName: "PilotoAlfa",
-        remotePlayers: {},
-        unsubPlayers: null,
-        unsubBoss: null,
-        lastSync: 0
-    };
-
-    async function initAuth() {
-        try {
-            let userCred;
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                userCred = await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                userCred = await signInAnonymously(auth);
-            }
-            window.mpState.user = userCred.user;
-        } catch(e) {
-            console.log("Firebase Auth modo local/demo:", e);
-        }
-    }
-    initAuth();
-
-    window.joinMultiplayerRoom = async function() {
-        const roomInput = document.getElementById('room-id-input').value.trim() || 'RAID-SHENRON';
-        const nameInput = document.getElementById('player-name-input').value.trim() || 'PilotoAlfa';
-
-        window.mpState.roomId = roomInput;
-        window.mpState.playerName = nameInput;
-        window.mpState.active = true;
-
-        document.getElementById('mp-status').innerText = "Conectado a la Incursión Multijugador...";
-        document.getElementById('multiplayer-lobby').style.display = 'none';
-        document.getElementById('raid-players-count').style.display = 'inline-block';
-
-        // Suscribirse a otros jugadores de la sala
-        const playersCol = collection(db, 'artifacts', appId, 'public', 'data', `raid_${roomInput}_players`);
-        window.mpState.unsubPlayers = onSnapshot(playersCol, (snapshot) => {
-            const list = document.getElementById('mp-players-list');
-            list.innerHTML = '';
-            const currentUids = [];
-
-            snapshot.forEach(docSnap => {
-                const pData = docSnap.data();
-                if (pData.uid !== window.mpState.user?.uid) {
-                    window.mpState.remotePlayers[pData.uid] = pData;
-                }
-                currentUids.push(pData.uid);
-
-                const tag = document.createElement('span');
-                tag.className = 'mp-tag';
-                tag.innerText = `🎮 ${pData.name} (HP: ${Math.ceil(pData.health || 0)})`;
-                list.appendChild(tag);
-            });
-
-            // Eliminar desconectados
-            Object.keys(window.mpState.remotePlayers).forEach(uid => {
-                if (!currentUids.includes(uid)) delete window.mpState.remotePlayers[uid];
-            });
-
-            const count = Object.keys(window.mpState.remotePlayers).length + 1;
-            document.getElementById('raid-players-count').innerText = `👥 ${count}`;
-        }, (err) => console.log("Player Sync Error:", err));
-
-        // Sincronizar Boss / Super Shenron
-        const bossDocRef = doc(db, 'artifacts', appId, 'public', 'data', `raid_${roomInput}_boss`, 'shenlong');
-        window.mpState.unsubBoss = onSnapshot(bossDocRef, (snap) => {
-            if (snap.exists()) {
-                const bData = snap.data();
-                const localBoss = enemies.find(e => e.type.startsWith('boss_'));
-                if (localBoss) {
-                    if (bData.health !== undefined && bData.health < localBoss.health) {
-                        localBoss.health = bData.health;
-                    }
-                    if (bData.isPhase2 && !localBoss.isPhase2) {
-                        localBoss.isPhase2 = true;
-                        localBoss.bossName = "SUPER SHENRON (DRAGÓN DIVINO PLANETARIO)";
-                        localBoss.color = "#FACC15";
-                        localBoss.radius = 240;
-                    }
-                }
-            }
-        }, (err) => console.log("Boss Sync Error:", err));
-
-        // Saltar a la Incursión
-        jumpToBossWave(90);
-    };
-
-    window.syncPlayerToFirestore = async function(pObj) {
-        if (!window.mpState.active || !window.mpState.user) return;
-        const now = Date.now();
-        if (now - window.mpState.lastSync < 100) return; // Limitar envío a 10 fps
-        window.mpState.lastSync = now;
-
-        const uid = window.mpState.user.uid;
-        const pRef = doc(db, 'artifacts', appId, 'public', 'data', `raid_${window.mpState.roomId}_players`, uid);
-
-        try {
-            await setDoc(pRef, {
-                uid: uid,
-                name: window.mpState.playerName,
-                x: pObj.x,
-                y: pObj.y,
-                health: pObj.health,
-                maxHealth: pObj.maxHealth,
-                shield: pObj.shield,
-                class: selectedTankClass || 'Base',
-                subclass: selectedSubclass || '',
-                isSupreme: isSupremeForm,
-                lastUpdate: Date.now()
-            }, { merge: true });
-        } catch(e) {
-            console.log("Error syncing player", e);
-        }
-    };
-
-    window.damageBossMultiplayer = async function(bossObj, damage) {
-        if (!window.mpState.active || !window.mpState.user) return;
-        const bossDocRef = doc(db, 'artifacts', appId, 'public', 'data', `raid_${window.mpState.roomId}_boss`, 'shenlong');
-        try {
-            await setDoc(bossDocRef, {
-                health: bossObj.health - damage,
-                maxHealth: bossObj.maxHealth,
-                isPhase2: bossObj.isPhase2,
-                lastDamagedBy: window.mpState.playerName
-            }, { merge: true });
-        } catch(e) {}
-    };
-</script>
-
 <script>
+    // CONFIGURACIÓN DE FIREBASE (Reemplaza con las credenciales de tu proyecto de Firebase)
+    const firebaseConfig = {
+        apiKey: "COLOCA_AQUI_TU_API_KEY",
+        authDomain: "tu-proyecto.firebaseapp.com",
+        databaseURL: "https://tu-proyecto-default-rtdb.firebaseio.com",
+        projectId: "tu-proyecto",
+        storageBucket: "tu-proyecto.appspot.com",
+        messagingSenderId: "123456789",
+        appId: "1:123456789:web:abc123"
+    };
+
+    let db = null;
+    let isMultiplayer = false;
+    let roomId = null;
+    let playerId = "player_" + Math.random().toString(36).substr(2, 9);
+    let otherPlayers = {};
+    let isHost = false;
+
+    // Inicializar Firebase solo si hay configuración válida
+    try {
+        if (firebaseConfig.apiKey !== "COLOCA_AQUI_TU_API_KEY") {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+        }
+    } catch(e) { console.log("Firebase no configurado aún."); }
+
+    function createMultiplayerRoom() {
+        if (!db) {
+            document.getElementById('mp-status-text').innerText = "⚠️ Agrega tus credenciales de Firebase en el script para habilitar la red.";
+            return;
+        }
+        roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+        isHost = true;
+        isMultiplayer = true;
+        
+        db.ref(`rooms/${roomId}/host`).set(playerId);
+        setupRoomListeners();
+        
+        document.getElementById('multiplayer-modal').style.display = 'none';
+        document.getElementById('room-display-hud').lastElementChild.innerText = roomId;
+        startWave();
+    }
+
+    function joinMultiplayerRoom() {
+        const inputCode = document.getElementById('room-code-input').value.toUpperCase();
+        if (!inputCode) return;
+
+        if (!db) {
+            document.getElementById('mp-status-text').innerText = "⚠️ Agrega tus credenciales de Firebase en el script.";
+            return;
+        }
+
+        db.ref(`rooms/${inputCode}`).once('value', snapshot => {
+            if (snapshot.exists()) {
+                roomId = inputCode;
+                isHost = false;
+                isMultiplayer = true;
+                setupRoomListeners();
+                document.getElementById('multiplayer-modal').style.display = 'none';
+                document.getElementById('room-display-hud').lastElementChild.innerText = roomId;
+                startWave();
+            } else {
+                document.getElementById('mp-status-text').innerText = "❌ Sala no encontrada.";
+            }
+        });
+    }
+
+    function setupRoomListeners() {
+        // Enviar mi posición al servidor continuamente
+        setInterval(() => {
+            if (isMultiplayer && roomId && db) {
+                db.ref(`rooms/${roomId}/players/${playerId}`).set({
+                    x: player.x,
+                    y: player.y,
+                    health: player.health,
+                    maxHealth: player.maxHealth,
+                    shield: player.shield,
+                    class: selectedTankClass || 'base',
+                    subclass: selectedSubclass || '',
+                    isSupreme: isSupremeForm
+                });
+            }
+        }, 80);
+
+        // Escuchar la posición de otros jugadores
+        db.ref(`rooms/${roomId}/players`).on('value', snapshot => {
+            otherPlayers = snapshot.val() || {};
+        });
+
+        // Limpiar al desconectarse
+        db.ref(`rooms/${roomId}/players/${playerId}`).onDisconnect().remove();
+    }
+
+    function startSinglePlayer() {
+        isMultiplayer = false;
+        document.getElementById('multiplayer-modal').style.display = 'none';
+        startWave();
+    }
+
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const radarCanvas = document.getElementById('radar');
@@ -595,7 +463,7 @@
     let inShop = false;
     let gameOver = false;
 
-    let raidTimeLeft = 150; 
+    let raidTimeLeft = 300; // 5 Minutos (300 segundos)
 
     let maxTurretsAllowed = 1;
     const MAX_TURRETS = 3;
@@ -649,6 +517,7 @@
     let enemies = []; let particles = []; let mines = []; let powerUps = [];
     let turrets = []; let meteorWarnings = []; let droppedCoins = [];
 
+    // RELOJ DE INCURSIÓN (DISMINUYE CADA SEGUNDO)
     setInterval(() => {
         if (raidTimeLeft > 0) {
             raidTimeLeft--;
@@ -665,18 +534,13 @@
         document.getElementById('raid-alert-modal').classList.add('active');
     }
 
-    function openMultiplayerLobby() {
+    function acceptRaid() {
         document.getElementById('raid-alert-modal').classList.remove('active');
-        document.getElementById('multiplayer-lobby').style.display = 'flex';
-    }
-
-    function closeMultiplayerLobby() {
-        document.getElementById('multiplayer-lobby').style.display = 'none';
+        jumpToBossWave(90); // Incursión Shenlong -> Super Shenron
     }
 
     function declineRaid() {
         document.getElementById('raid-alert-modal').classList.remove('active');
-        jumpToBossWave(90); // Modo solo
     }
 
     window.addEventListener('keydown', e => {
@@ -743,8 +607,6 @@
 
         const stolenHp = targetBoss.maxHealth * 0.05;
         targetBoss.health -= stolenHp;
-        if (window.damageBossMultiplayer) window.damageBossMultiplayer(targetBoss, stolenHp);
-
         player.health = Math.min(player.maxHealth, player.health + stolenHp * 0.5);
         player.shield = Math.min(player.maxShield, player.shield + stolenHp * 0.5);
 
@@ -770,9 +632,7 @@
                 } else {
                     const pushAngle = Math.atan2(e.y - player.y, e.x - player.x);
                     e.x += Math.cos(pushAngle) * 220; e.y += Math.sin(pushAngle) * 220;
-                    e.health -= 40; 
-                    if (e.type.startsWith('boss_') && window.damageBossMultiplayer) window.damageBossMultiplayer(e, 40);
-                    if (e.health <= 0) onEnemyKilled(e);
+                    e.health -= 40; if (e.health <= 0) onEnemyKilled(e);
                 }
             }
         }
@@ -1029,10 +889,7 @@
             }
             if(targets.length > 0) {
                 targets.forEach(e => {
-                    if(!e.isShielded) {
-                        e.health -= player.damage * dmgMult * 1.5;
-                        if (e.type.startsWith('boss_') && window.damageBossMultiplayer) window.damageBossMultiplayer(e, player.damage * dmgMult * 1.5);
-                    }
+                    if(!e.isShielded) e.health -= player.damage * dmgMult * 1.5;
                     for(let i=0; i<5; i++) particles.push(new Particle(e.x, e.y, '#38bdf8'));
                     if (e.health <= 0) onEnemyKilled(e);
                 });
@@ -1233,10 +1090,6 @@
         updateDrones(dt);
         updateTurrets(dt);
 
-        if (window.syncPlayerToFirestore) {
-            window.syncPlayerToFirestore(player);
-        }
-
         const hasBossAlive = enemies.some(e => e.type.startsWith('boss_'));
         const maxParticleLimit = hasBossAlive ? 60 : 150;
         if (particles.length > maxParticleLimit) {
@@ -1280,7 +1133,6 @@
                 enemies.forEach((e) => {
                     if (Math.hypot(e.x - hp.x, e.y - hp.y) < 120 && !e.isShielded) {
                         e.health -= hp.damage;
-                        if (e.type.startsWith('boss_') && window.damageBossMultiplayer) window.damageBossMultiplayer(e, hp.damage);
                         if (e.health <= 0) onEnemyKilled(e);
                     }
                 });
@@ -1301,7 +1153,6 @@
                     e.x += Math.cos(angle) * 5; e.y += Math.sin(angle) * 5;
                     if (dist < bh.radius && !e.isShielded) {
                         e.health -= dt * 75;
-                        if (e.type.startsWith('boss_') && window.damageBossMultiplayer) window.damageBossMultiplayer(e, dt * 75);
                         if (e.health <= 0) onEnemyKilled(e);
                     }
                 }
@@ -1333,7 +1184,6 @@
                 enemies.forEach((e) => {
                     if (Math.hypot(e.x - mw.x, e.y - mw.y) < mw.radius) {
                         e.health -= 180;
-                        if (e.type.startsWith('boss_') && window.damageBossMultiplayer) window.damageBossMultiplayer(e, 180);
                         if (e.health <= 0) onEnemyKilled(e);
                     }
                 });
@@ -1399,7 +1249,6 @@
                     enemies.forEach((eSub) => {
                         if (Math.hypot(m.x - eSub.x, m.y - eSub.y) < 130 && !eSub.isShielded) {
                             eSub.health -= m.damage;
-                            if (eSub.type.startsWith('boss_') && window.damageBossMultiplayer) window.damageBossMultiplayer(eSub, m.damage);
                             if (eSub.health <= 0) onEnemyKilled(eSub);
                         }
                     });
@@ -1510,7 +1359,6 @@
             if (distToPlayer < player.radius + e.radius) {
                 if (spikeLevel > 0 && !e.isShielded) {
                     e.health -= spikeDamage * dt * 10;
-                    if (e.type.startsWith('boss_') && window.damageBossMultiplayer) window.damageBossMultiplayer(e, spikeDamage * dt * 10);
                     for (let i = 0; i < 2; i++) particles.push(new Particle(e.x, e.y, '#eab308'));
                 }
 
@@ -1528,7 +1376,6 @@
                 if (Math.hypot(b.x - e.x, b.y - e.y) < e.radius + b.radius) {
                     if (!e.isShielded) {
                         e.health -= b.damage; applyElementalEffect(e);
-                        if (e.type.startsWith('boss_') && window.damageBossMultiplayer) window.damageBossMultiplayer(e, b.damage);
                     }
                     particles.push(new Particle(b.x, b.y, e.isShielded ? '#38bdf8' : e.color));
                     if (!b.piercing) playerBullets.splice(bIndex, 1);
@@ -1539,10 +1386,7 @@
             for (let dbIndex = droneBullets.length - 1; dbIndex >= 0; dbIndex--) {
                 const db = droneBullets[dbIndex];
                 if (Math.hypot(db.x - e.x, db.y - e.y) < e.radius + db.radius) {
-                    if (!e.isShielded) {
-                        e.health -= db.damage;
-                        if (e.type.startsWith('boss_') && window.damageBossMultiplayer) window.damageBossMultiplayer(e, db.damage);
-                    }
+                    if (!e.isShielded) e.health -= db.damage;
                     particles.push(new Particle(db.x, db.y, '#10B981'));
                     droneBullets.splice(dbIndex, 1);
                     if (e.health <= 0) onEnemyKilled(e);
@@ -1552,10 +1396,7 @@
             for (let tbIndex = turretBullets.length - 1; tbIndex >= 0; tbIndex--) {
                 const tb = turretBullets[tbIndex];
                 if (Math.hypot(tb.x - e.x, tb.y - e.y) < e.radius + tb.radius) {
-                    if (!e.isShielded) {
-                        e.health -= tb.damage;
-                        if (e.type.startsWith('boss_') && window.damageBossMultiplayer) window.damageBossMultiplayer(e, tb.damage);
-                    }
+                    if (!e.isShielded) e.health -= tb.damage;
                     particles.push(new Particle(tb.x, tb.y, '#a855f7'));
                     turretBullets.splice(tbIndex, 1);
                     if (e.health <= 0) onEnemyKilled(e);
@@ -1805,7 +1646,7 @@
     }
 
     function drawBossNamed(e){
-        const T=e.type; if(!T.startsWith('boss_'))return false;
+        const T=e.type;if(!T.startsWith('boss_'))return false;
         const c=ctx,t=e.animTick||0,p2=!!e.isPhase2;
         const P=(a,f,s,w)=>{c.beginPath();a.forEach((q,i)=>i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]));c.closePath();if(f){c.fillStyle=f;c.fill()}if(s){c.strokeStyle=s;c.lineWidth=w||2;c.stroke()}};
         const O=(x,y,r,f,s)=>{c.beginPath();c.arc(x,y,r,0,7);if(f){c.fillStyle=f;c.fill()}if(s){c.strokeStyle=s;c.lineWidth=2;c.stroke()}};
@@ -1815,81 +1656,79 @@
         const S=(n,sp,amp,fr,cb)=>{for(let i=n;i>=1;i--)cb(-i*sp,Math.sin(t*fr+i*.7)*amp,i)};
         const B=(x,y,r,n)=>{O(x,y,r,'#ff9d1f','#7a2e00');for(let q=0;q<n;q++){n==1?O(x,y,r*.28,'#d00'):O(x+Math.cos(q*6.283/n)*r*.5,y+Math.sin(q*6.283/n)*r*.5,r*.17,'#d00')}O(x-r*.35,y-r*.35,r*.22,'rgba(255,255,255,.6)')};
         const D=o=>{
-            S(10,30,22,2,(x,y,i)=>{const r=40-i*1.9;O(x,y,r,o.body,o.edge);P([[x-5,y-r],[x,y-r-15],[x+5,y-r]],o.spine);O(x+4,y+r*.4,r*.38,o.belly)});
-            [-1,1].forEach(s=>{c.beginPath();c.moveTo(30,s*36);c.lineTo(8,s*86);c.lineTo(-34,s*112);c.moveTo(8,s*86);c.lineTo(34,s*124);c.strokeStyle=o.horn;c.lineWidth=6;c.stroke();
-            Q(150,s*10,190,s*(44+Math.sin(t*3)*12),240,s*(30+Math.sin(t*3)*16),o.horn,2)});
-            P([[-10,-26],[-50,-34],[-70,0],[-50,34],[-10,26]],o.spine,o.edge,2);
-            P([[0,-46],[80,-40],[140,-20],[168,0],[140,20],[80,40],[0,46]],o.body,o.edge,3);
-            P([[110,-14],[168,-6],[168,6],[110,14]],o.belly);
-            [-1,1].forEach(s=>{eye(72,s*26,o.eye);O(160,s*8,3,'#000')});
+         S(10,30,22,2,(x,y,i)=>{const r=40-i*1.9;O(x,y,r,o.body,o.edge);P([[x-5,y-r],[x,y-r-15],[x+5,y-r]],o.spine);O(x+4,y+r*.4,r*.38,o.belly)});
+         [-1,1].forEach(s=>{c.beginPath();c.moveTo(30,s*36);c.lineTo(8,s*86);c.lineTo(-34,s*112);c.moveTo(8,s*86);c.lineTo(34,s*124);c.strokeStyle=o.horn;c.lineWidth=6;c.stroke();
+          Q(150,s*10,190,s*(44+Math.sin(t*3)*12),240,s*(30+Math.sin(t*3)*16),o.horn,2)});
+         P([[-10,-26],[-50,-34],[-70,0],[-50,34],[-10,26]],o.spine,o.edge,2);
+         P([[0,-46],[80,-40],[140,-20],[168,0],[140,20],[80,40],[0,46]],o.body,o.edge,3);
+         P([[110,-14],[168,-6],[168,6],[110,14]],o.belly);
+         [-1,1].forEach(s=>{eye(72,s*26,o.eye);O(160,s*8,3,'#000')});
         };
         c.save();c.scale(e.radius/140,e.radius/140);c.lineJoin='round';
         switch(T){
         case 'boss_fire':{const f=Math.sin(t*3)*22;
-            [-1,1].forEach(s=>{P([[-10,s*20],[30,s*(90+f)],[110,s*(155+f)],[75,s*(105+f*.6)],[60,s*(125+f)],[10,s*70],[-40,s*30]],'#7c1d0a','#ff7a1a');L(30,s*(90+f),58,s*55,'#ff7a1a',2);L(110,s*(155+f),42,s*50,'#ff7a1a',2)});
-            P([[-110,0],[-170,-14],[-150,0],[-170,14]],'#2b0d07','#ff5a1f');
-            P([[-110,0],[-60,-44],[20,-50],[70,-22],[70,22],[20,50],[-60,44]],'#2b0d07','#ff5a1f',3);
-            [[-70,-12,-25,6],[-25,6,12,-24],[0,34,34,12],[-55,28,-12,38],[10,-40,40,-18]].forEach(a=>L(a[0],a[1],a[2],a[3],'#ffb02e',2));
-            P([[60,-28],[122,-22],[142,-5],[142,5],[122,22],[60,28]],'#3d1209','#ff5a1f',2);
-            [-1,1].forEach(s=>{P([[78,s*26],[58,s*66],[104,s*28]],'#ffb02e');eye(95,s*13,'#ffe066')});
-            const fl=Math.sin(t*9)*10;P([[142,-9],[215+fl,-30],[258+fl,0],[215+fl,30],[142,9]],'rgba(255,120,20,.85)');P([[142,-4],[195+fl,-11],[222+fl,0],[195+fl,11],[142,4]],'#fff3a0');
-            break}
+         [-1,1].forEach(s=>{P([[-10,s*20],[30,s*(90+f)],[110,s*(155+f)],[75,s*(105+f*.6)],[60,s*(125+f)],[10,s*70],[-40,s*30]],'#7c1d0a','#ff7a1a');L(30,s*(90+f),58,s*55,'#ff7a1a',2);L(110,s*(155+f),42,s*50,'#ff7a1a',2)});
+         P([[-110,0],[-170,-14],[-150,0],[-170,14]],'#2b0d07','#ff5a1f');
+         P([[-110,0],[-60,-44],[20,-50],[70,-22],[70,22],[20,50],[-60,44]],'#2b0d07','#ff5a1f',3);
+         [[-70,-12,-25,6],[-25,6,12,-24],[0,34,34,12],[-55,28,-12,38],[10,-40,40,-18]].forEach(a=>L(a[0],a[1],a[2],a[3],'#ffb02e',2));
+         P([[60,-28],[122,-22],[142,-5],[142,5],[122,22],[60,28]],'#3d1209','#ff5a1f',2);
+         [-1,1].forEach(s=>{P([[78,s*26],[58,s*66],[104,s*28]],'#ffb02e');eye(95,s*13,'#ffe066')});
+         const fl=Math.sin(t*9)*10;P([[142,-9],[215+fl,-30],[258+fl,0],[215+fl,30],[142,9]],'rgba(255,120,20,.85)');P([[142,-4],[195+fl,-11],[222+fl,0],[195+fl,11],[142,4]],'#fff3a0');
+         break}
         case 'boss_electric':{
-            S(8,32,26,2.2,(x,y,i)=>{const r=44-i*2.6;P([[x-7,y-r],[x,y-r-17],[x+7,y-r]],'#ffd93b');P([[x-7,y+r],[x,y+r+17],[x+7,y+r]],'#ffd93b');O(x,y,r,i%2?'#1b2a52':'#26397a','#ffd93b')});
-            P([[0,-54],[100,-36],[152,0],[100,36],[0,54]],'#1b2a52','#ffd93b',3);
-            [-1,1].forEach(s=>{P([[18,s*52],[-12,s*100],[62,s*46]],'#ffd93b');eye(82,s*22,'#fff8a8')});
-            O(152,0,14+Math.sin(t*10)*4,'#fff8a8','#ffd93b');
-            break}
+         S(8,32,26,2.2,(x,y,i)=>{const r=44-i*2.6;P([[x-7,y-r],[x,y-r-17],[x+7,y-r]],'#ffd93b');P([[x-7,y+r],[x,y+r+17],[x+7,y+r]],'#ffd93b');O(x,y,r,i%2?'#1b2a52':'#26397a','#ffd93b')});
+         P([[0,-54],[100,-36],[152,0],[100,36],[0,54]],'#1b2a52','#ffd93b',3);
+         [-1,1].forEach(s=>{P([[18,s*52],[-12,s*100],[62,s*46]],'#ffd93b');eye(82,s*22,'#fff8a8')});
+         O(152,0,14+Math.sin(t*10)*4,'#fff8a8','#ffd93b');
+         break}
         case 'boss_wind':{
-            [-1,1].forEach(s=>{const f=Math.sin(t*3)*14;c.beginPath();c.moveTo(0,s*18);c.quadraticCurveTo(10,s*(125+f),160,s*(160+f));c.quadraticCurveTo(70,s*(95+f),42,s*24);c.closePath();c.fillStyle='#10b981';c.fill();c.strokeStyle='#d1fae5';c.lineWidth=2;c.stroke()});
-            const w=Math.sin(t*3)*20;L(-80,0,-150,w,'#34d399',8);
-            P([[-85,0],[-30,-27],[50,-21],[92,0],[50,21],[-30,27]],'#064e3b','#34d399',2);
-            P([[80,-17],[132,-9],[156,0],[132,9],[80,17]],'#10b981','#a7f3d0',2);
-            [-1,1].forEach(s=>{P([[92,s*15],[48,s*52],[116,s*12]],'#d1fae5','#34d399',2);eye(112,s*8,'#ecfccb')});break}
+         [-1,1].forEach(s=>{const f=Math.sin(t*3)*14;c.beginPath();c.moveTo(0,s*18);c.quadraticCurveTo(10,s*(125+f),160,s*(160+f));c.quadraticCurveTo(70,s*(95+f),42,s*24);c.closePath();c.fillStyle='#10b981';c.fill();c.strokeStyle='#d1fae5';c.lineWidth=2;c.stroke()});
+         const w=Math.sin(t*3)*20;L(-80,0,-150,w,'#34d399',8);
+         P([[-85,0],[-30,-27],[50,-21],[92,0],[50,21],[-30,27]],'#064e3b','#34d399',2);
+         P([[80,-17],[132,-9],[156,0],[132,9],[80,17]],'#10b981','#a7f3d0',2);
+         [-1,1].forEach(s=>{P([[92,s*15],[48,s*52],[116,s*12]],'#d1fae5','#34d399',2);eye(112,s*8,'#ecfccb')});break}
         case 'boss_water':{
-            S(7,34,18,1.8,(x,y,i)=>{const r=48-i*2.8;O(x,y,r,'#0b3a5e','#38bdf8');P([[x-r*.4,y-r*.9],[x+r*.4,y-r*.9],[x+r*.3,y+r*.9],[x-r*.3,y+r*.9]],'#134e75','#7dd3fc',2)});
-            P([[-10,-62],[90,-56],[152,-26],[152,26],[90,56],[-10,62]],'#0b3a5e','#38bdf8',3);
-            Q(60,-58,120,-125,178,-88,'#7dd3fc',3);O(178,-88,11,'#e0f2fe','#38bdf8');
-            [-1,1].forEach(s=>eye(100,s*34,'#e0f2fe'));break}
+         S(7,34,18,1.8,(x,y,i)=>{const r=48-i*2.8;O(x,y,r,'#0b3a5e','#38bdf8');P([[x-r*.4,y-r*.9],[x+r*.4,y-r*.9],[x+r*.3,y+r*.9],[x-r*.3,y+r*.9]],'#134e75','#7dd3fc',2)});
+         P([[-10,-62],[90,-56],[152,-26],[152,26],[90,56],[-10,62]],'#0b3a5e','#38bdf8',3);
+         Q(60,-58,120,-125,178,-88,'#7dd3fc',3);O(178,-88,11,'#e0f2fe','#38bdf8');
+         [-1,1].forEach(s=>eye(100,s*34,'#e0f2fe'));break}
         case 'boss_galactic':{
-            S(8,32,24,2,(x,y,i)=>{const r=46-i*2.6;O(x,y,r,'#1e0a3c','#c084fc')});
-            c.beginPath();c.ellipse(70,0,110,32,t*.4,0,7);c.strokeStyle='rgba(240,171,252,.6)';c.lineWidth=3;c.stroke();
-            O(70,0,64,'#2a0f55','#c084fc');
-            [-1,1].forEach(s=>{eye(104,s*20,'#fff')});break}
+         S(8,32,24,2,(x,y,i)=>{const r=46-i*2.6;O(x,y,r,'#1e0a3c','#c084fc')});
+         c.beginPath();c.ellipse(70,0,110,32,t*.4,0,7);c.strokeStyle='rgba(240,171,252,.6)';c.lineWidth=3;c.stroke();
+         O(70,0,64,'#2a0f55','#c084fc');
+         [-1,1].forEach(s=>{eye(104,s*20,'#fff')});break}
         case 'boss_earth':{
-            [-1,1].forEach((s,k)=>{const sw=Math.sin(t*2+k*2.5)*16;P([[0,s*45],[80,s*(75+sw)],[112,s*(88+sw)],[112,s*(46+sw)],[80,s*34]],'#6b5b4b','#3b2f25',3);L(40,s*(52+sw/2),70,s*(60+sw),'#3b2f25',2)});
-            P([[-75,-10],[-58,-74],[-5,-96],[58,-74],[90,-32],[90,32],[58,74],[-5,96],[-58,74],[-80,16]],'#8a7765','#3b2f25',4);
-            [-1,1].forEach(s=>{P([[48,s*42],[92,s*30],[92,s*16],[48,s*28]],'#3b2f25');O(70,s*22,9,'#fff','#3b2f25');O(73,s*22,4,'#111')});
-            break}
+         [-1,1].forEach((s,k)=>{const sw=Math.sin(t*2+k*2.5)*16;P([[0,s*45],[80,s*(75+sw)],[112,s*(88+sw)],[112,s*(46+sw)],[80,s*34]],'#6b5b4b','#3b2f25',3);L(40,s*(52+sw/2),70,s*(60+sw),'#3b2f25',2)});
+         P([[-75,-10],[-58,-74],[-5,-96],[58,-74],[90,-32],[90,32],[58,74],[-5,96],[-58,74],[-80,16]],'#8a7765','#3b2f25',4);
+         [-1,1].forEach(s=>{P([[48,s*42],[92,s*30],[92,s*16],[48,s*28]],'#3b2f25');O(70,s*22,9,'#fff','#3b2f25');O(73,s*22,4,'#111')});
+         break}
         case 'boss_toxic':{
-            const f=Math.sin(t*3)*16;
-            [-1,1].forEach(s=>{P([[20,s*22],[50,s*(100+f)],[130,s*(138+f)],[100,s*(98+f)],[116,s*(66+f)],[70,s*50]],'#3b0a52','#a3e635',2)});
-            for(let i=7;i>=0;i--){const x=-90-i*17,y=Math.sin(t*3+i*.6)*11;O(x,y,15-i*1.1,'#14532d','#84cc16')}
-            P([[-92,0],[-40,-34],[42,-30],[84,0],[42,30],[-40,34]],'#14532d','#84cc16',3);
-            [-1,1].forEach(s=>{P([[80,s*18],[54,s*46],[102,s*16]],'#a3e635');eye(108,s*10,'#f7ff3c')});break}
+         const f=Math.sin(t*3)*16;
+         [-1,1].forEach(s=>{P([[20,s*22],[50,s*(100+f)],[130,s*(138+f)],[100,s*(98+f)],[116,s*(66+f)],[70,s*50]],'#3b0a52','#a3e635',2)});
+         for(let i=7;i>=0;i--){const x=-90-i*17,y=Math.sin(t*3+i*.6)*11;O(x,y,15-i*1.1,'#14532d','#84cc16')}
+         P([[-92,0],[-40,-34],[42,-30],[84,0],[42,30],[-40,34]],'#14532d','#84cc16',3);
+         [-1,1].forEach(s=>{P([[80,s*18],[54,s*46],[102,s*16]],'#a3e635');eye(108,s*10,'#f7ff3c')});break}
         case 'boss_omega':
-            D({body:'#2a0d33',belly:'#5b1a2e',edge:'#f97316',spine:'#7f1d1d',horn:'#ea580c',eye:'#ff2a2a'});
-            if(!p2)B(40,0,22,1);else for(let n=0;n<7;n++){const i=1+n*1.55;B(-i*30,Math.sin(t*2+i*.7)*22,16,n+1)}break;
+         D({body:'#2a0d33',belly:'#5b1a2e',edge:'#f97316',spine:'#7f1d1d',horn:'#ea580c',eye:'#ff2a2a'});
+         if(!p2)B(40,0,22,1);else for(let n=0;n<7;n++){const i=1+n*1.55;B(-i*30,Math.sin(t*2+i*.7)*22,16,n+1)}break;
         case 'boss_shenlong':
-            if(p2){c.fillStyle='rgba(250,204,21,.08)';c.beginPath();c.arc(40,0,240,0,7);c.fill()}
-            D(p2?{body:'#f5c518',belly:'#fff3a0',edge:'#fff7c2',spine:'#d97706',horn:'#fff7c2',eye:'#ff2a2a'}:{body:'#17a360',belly:'#d9f99d',edge:'#064e3b',spine:'#065f46',horn:'#f5d68a',eye:'#e11d2a'});
-            for(let n=0;n<7;n++){const a=t*1.05+n*Math.PI*2/7;const bx=Math.cos(a)*(p2?205:155),by=Math.sin(a)*(p2?112:88);O(bx,by,p2?12:9,'#ff9f1c','#fff0a6');for(let k=0;k<=n;k++)O(bx+(k-2)*2,by-2,1.2,'#d62828');}
-            break;
+         if(p2){c.fillStyle='rgba(250,204,21,.08)';c.beginPath();c.arc(40,0,240,0,7);c.fill()}
+         D(p2?{body:'#f5c518',belly:'#fff3a0',edge:'#fff7c2',spine:'#d97706',horn:'#fff7c2',eye:'#ff2a2a'}:{body:'#17a360',belly:'#d9f99d',edge:'#064e3b',spine:'#065f46',horn:'#f5d68a',eye:'#e11d2a'});
+         for(let n=0;n<7;n++){const a=t*1.05+n*Math.PI*2/7;const bx=Math.cos(a)*(p2?205:155),by=Math.sin(a)*(p2?112:88);O(bx,by,p2?12:9,'#ff9f1c','#fff0a6');for(let k=0;k<=n;k++)O(bx+(k-2)*2,by-2,1.2,'#d62828');}
+         break;
         }
-        c.restore();return true
+        c.restore();return true;
     }
 
-    function drawFantasyTank(angle, customClass = null) {
+    function drawFantasyTank(angle) {
         ctx.save();
         ctx.rotate(angle);
 
         let mainColor = '#0EA5E9';
         let accentColor = '#38BDF8';
-        const cls = customClass || selectedTankClass;
-
-        if (cls === 'obsidian') { mainColor = '#ef4444'; accentColor = '#f97316'; }
-        if (cls === 'arcane') { mainColor = '#a855f7'; accentColor = '#c084fc'; }
-        if (cls === 'devourer') { mainColor = '#10B981'; accentColor = '#34D399'; }
+        if (selectedTankClass === 'obsidian') { mainColor = '#ef4444'; accentColor = '#f97316'; }
+        if (selectedTankClass === 'arcane') { mainColor = '#a855f7'; accentColor = '#c084fc'; }
+        if (selectedTankClass === 'devourer') { mainColor = '#10B981'; accentColor = '#34D399'; }
         if (isSupremeForm) { mainColor = '#FACC15'; accentColor = '#FEF08A'; }
 
         [-1, 1].forEach(side => {
@@ -1942,40 +1781,6 @@
         ctx.restore();
     }
 
-    function drawRemotePlayers(camX, camY) {
-        if (!window.mpState || !window.mpState.active) return;
-        const remotes = window.mpState.remotePlayers;
-
-        Object.keys(remotes).forEach(uid => {
-            const rp = remotes[uid];
-            if (!rp.x || !rp.y) return;
-
-            const rx = rp.x - camX;
-            const ry = rp.y - camY;
-
-            ctx.save();
-            ctx.translate(rx, ry);
-
-            // Nombre sobre el jugador
-            ctx.font = 'bold 12px Chakra Petch';
-            ctx.fillStyle = '#38bdf8';
-            ctx.textAlign = 'center';
-            ctx.fillText(rp.name || 'Aliado', 0, -35);
-
-            // Barra de HP aliada
-            if (rp.health && rp.maxHealth) {
-                const barW = 40;
-                ctx.fillStyle = '#1e293b';
-                ctx.fillRect(-barW/2, -28, barW, 4);
-                ctx.fillStyle = '#10B981';
-                ctx.fillRect(-barW/2, -28, Math.max(0, (rp.health / rp.maxHealth) * barW), 4);
-            }
-
-            drawFantasyTank(0, rp.class);
-            ctx.restore();
-        });
-    }
-
     function drawBiome(camX, camY) {
         const boss = enemies.find(e => e.type.startsWith("boss_"));
         const type = boss ? boss.type : "normal";
@@ -2011,6 +1816,31 @@
         ctx.globalAlpha=.18; ctx.strokeStyle=pal[2]; ctx.lineWidth=1;
         for(let y=canvas.height*.68;y<canvas.height;y+=48){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke();}
         ctx.globalAlpha=1;
+    }
+
+    function drawOtherPlayers(camX, camY) {
+        if (!isMultiplayer) return;
+
+        for (let id in otherPlayers) {
+            if (id !== playerId) {
+                const p = otherPlayers[id];
+                ctx.save();
+                ctx.translate(p.x - camX, p.y - camY);
+
+                // Tanque Aliado
+                ctx.fillStyle = p.isSupreme ? '#f59e0b' : '#38bdf8';
+                ctx.beginPath(); ctx.arc(0, 0, 24, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.stroke();
+
+                // Barra de Vida
+                ctx.fillStyle = 'rgba(0,0,0,0.6)';
+                ctx.fillRect(-20, -38, 40, 6);
+                ctx.fillStyle = '#35f2a0';
+                ctx.fillRect(-20, -38, Math.max(0, (p.health / (p.maxHealth || 100)) * 40), 6);
+
+                ctx.restore();
+            }
+        }
     }
 
     function draw() {
@@ -2092,7 +1922,7 @@
             ctx.beginPath(); ctx.arc(hp.x - camX, hp.y - camY - arcHeight, hp.radius, 0, Math.PI * 2); ctx.fill();
         });
 
-        drawRemotePlayers(camX, camY);
+        drawOtherPlayers(camX, camY);
 
         if (iFrameTimer <= 0 || Math.floor(Date.now() / 80) % 2 === 0) {
             const mouseCamX = mousePos.x + camX; const mouseCamY = mousePos.y + camY;
@@ -2423,9 +2253,7 @@
     }
 
     checkHighScore();
-    startWave();
     loop();
-    
 </script>
 </body>
 </html>
