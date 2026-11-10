@@ -341,7 +341,8 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
 </div>
 
 <script>
-    // CONFIGURACIÓN DE FIREBASE (Reemplaza con las credenciales de tu proyecto de Firebase)
+    const _c = {}; const $id = i => _c[i] || (_c[i] = document.getElementById(i));
+ // CONFIGURACIÓN DE FIREBASE (Reemplaza con las credenciales de tu proyecto de Firebase)
     const firebaseConfig = {
         apiKey: "COLOCA_AQUI_TU_API_KEY",
         authDomain: "tu-proyecto.firebaseapp.com",
@@ -356,7 +357,7 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
     let isMultiplayer = false;
     let roomId = null;
     let playerId = "player_" + Math.random().toString(36).substr(2, 9);
-    let otherPlayers = {};
+    let otherPlayers = {}; const ghosts = {};
     let isHost = false;
 
     // Inicializar Firebase solo si hay configuración válida
@@ -369,7 +370,7 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
 
     function createMultiplayerRoom() {
         if (!db) {
-            document.getElementById('mp-status-text').innerText = "⚠️ Agrega tus credenciales de Firebase en el script para habilitar la red.";
+            $id('mp-status-text').innerText = "⚠️ Agrega tus credenciales de Firebase en el script para habilitar la red.";
             return;
         }
         roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -379,17 +380,17 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
         db.ref(`rooms/${roomId}/host`).set(playerId);
         setupRoomListeners();
         
-        document.getElementById('multiplayer-modal').style.display = 'none';
-        document.getElementById('room-display-hud').lastElementChild.innerText = roomId;
+        $id('multiplayer-modal').style.display = 'none';
+        $id('room-display-hud').lastElementChild.innerText = roomId;
         startWave();
     }
 
     function joinMultiplayerRoom() {
-        const inputCode = document.getElementById('room-code-input').value.toUpperCase();
+        const inputCode = $id('room-code-input').value.toUpperCase();
         if (!inputCode) return;
 
         if (!db) {
-            document.getElementById('mp-status-text').innerText = "⚠️ Agrega tus credenciales de Firebase en el script.";
+            $id('mp-status-text').innerText = "⚠️ Agrega tus credenciales de Firebase en el script.";
             return;
         }
 
@@ -399,18 +400,18 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
                 isHost = false;
                 isMultiplayer = true;
                 setupRoomListeners();
-                document.getElementById('multiplayer-modal').style.display = 'none';
-                document.getElementById('room-display-hud').lastElementChild.innerText = roomId;
+                $id('multiplayer-modal').style.display = 'none';
+                $id('room-display-hud').lastElementChild.innerText = roomId;
                 startWave();
             } else {
-                document.getElementById('mp-status-text').innerText = "❌ Sala no encontrada.";
+                $id('mp-status-text').innerText = "❌ Sala no encontrada.";
             }
         });
     }
 
     function setupRoomListeners() {
         // Enviar mi posición al servidor continuamente
-        setInterval(() => {
+        clearInterval(window._mpTimer); window._mpTimer = setInterval(() => {
             if (isMultiplayer && roomId && db) {
                 db.ref(`rooms/${roomId}/players/${playerId}`).set({
                     x: player.x,
@@ -436,13 +437,13 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
 
     function startSinglePlayer() {
         isMultiplayer = false;
-        document.getElementById('multiplayer-modal').style.display = 'none';
+        $id('multiplayer-modal').style.display = 'none';
         startWave();
     }
 
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const radarCanvas = document.getElementById('radar');
+    const canvas = $id('gameCanvas');
+    const ctx = canvas.getContext('2d', { alpha: false });
+    const radarCanvas = $id('radar');
     const rctx = radarCanvas.getContext('2d');
 
     function resizeCanvas() {
@@ -467,11 +468,13 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
 
     let maxTurretsAllowed = 1;
     const MAX_TURRETS = 3;
-    function toggleArsenal() { document.getElementById("weapon-selector").classList.toggle("arsenal-hidden"); } 
+    function toggleArsenal() { $id("weapon-selector").classList.toggle("arsenal-hidden"); } 
 
     let rebirthCount = 0;
     let rebirthSeeds = 0;
     let rebirthUpgrades = { rootsHp: 0, trunkSiphon: 0, branchesDmg: 0, leavesDrone: 0 };
+ function saveRebirth(){try{localStorage.setItem('blocknite_rebirth',JSON.stringify({rebirthCount,rebirthSeeds,rebirthUpgrades}))}catch(e){}}
+ function loadRebirth(){try{const d=JSON.parse(localStorage.getItem('blocknite_rebirth')||'null');if(d){rebirthCount=d.rebirthCount||0;rebirthSeeds=d.rebirthSeeds||0;Object.assign(rebirthUpgrades,d.rebirthUpgrades||{});for(const k in rebirthUpgrades)$id('lvl-'+k).innerText=rebirthUpgrades[k];}}catch(e){}applyRebirthPermanentStats();}
 
     let iFrameTimer = 0;
     let siphonCooldown = 15; let siphonTimer = 0; let siphonReady = true;
@@ -519,11 +522,12 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
 
     // RELOJ DE INCURSIÓN (DISMINUYE CADA SEGUNDO)
     setInterval(() => {
-        if (raidTimeLeft > 0) {
+ if (!gameStarted || paused) return;
+ if (raidTimeLeft > 0) {
             raidTimeLeft--;
             const m = Math.floor(raidTimeLeft / 60).toString().padStart(2, '0');
             const s = (raidTimeLeft % 60).toString().padStart(2, '0');
-            document.getElementById('raid-timer-display').innerText = `${m}:${s}`;
+            $id('raid-timer-display').innerText = `${m}:${s}`;
         } else {
             triggerShenlongRaidAlert();
             raidTimeLeft = 300;
@@ -531,20 +535,25 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
     }, 1000);
 
     function triggerShenlongRaidAlert() {
-        document.getElementById('raid-alert-modal').classList.add('active');
+ if (gameOver || raidActive || !gameStarted) return;
+        $id('raid-alert-modal').classList.add('active');
     }
 
-    function acceptRaid() {
-        document.getElementById('raid-alert-modal').classList.remove('active');
-        jumpToBossWave(90); // Incursión Shenlong -> Super Shenron
+    function startRaidBoss(){ if(gameOver||raidActive||!gameStarted) return; raidActive=true; enemies=[]; enemyBullets=[]; enemiesToSpawn=0; enemiesAlive=1; inShop=false; $id('shop-modal').style.display='none'; spawnEnemy('boss_shenlong'); updateHUD(); }
+function acceptRaid() {
+        $id('raid-alert-modal').classList.remove('active');
+        startRaidBoss(); // Incursión Shenlong -> Super Shenron
     }
 
     function declineRaid() {
-        document.getElementById('raid-alert-modal').classList.remove('active');
+        $id('raid-alert-modal').classList.remove('active');
     }
 
     window.addEventListener('keydown', e => {
         keys[e.code] = true;
+ if (['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault();
+ if (e.code === 'KeyP' || e.code === 'Escape') { paused = !paused; return; }
+ if (paused) return;
         if(e.code === 'Space' && skillReady && !inShop && !gameOver) triggerSpecialSkill();
         if(e.code === 'KeyE' && mineReady && !inShop && !gameOver) dropMine();
         if(e.code === 'KeyQ' && turretReady && !inShop && !gameOver) deployTurret();
@@ -559,9 +568,11 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
         if(e.code === 'Digit6') switchWeapon(6);
         if(e.code === 'Digit7') switchWeapon(7);
     });
-    window.addEventListener('keyup', e => keys[e.code] = false);
+    window.addEventListener('blur', () => { keys = {}; isShooting = false; if (gameStarted && !inShop && !gameOver) paused = true; });
+ canvas.addEventListener('contextmenu', e => e.preventDefault());
+ window.addEventListener('keyup', e => keys[e.code] = false);
     window.addEventListener('mousemove', e => { mousePos.x = e.clientX; mousePos.y = e.clientY; });
-    window.addEventListener('mousedown', e => { if(e.button === 0) isShooting = true; });
+    window.addEventListener('mousedown', e => { if(e.button === 0 && e.target === canvas) isShooting = true; });
     window.addEventListener('mouseup', e => { if(e.button === 0) isShooting = false; });
 
     function applyRebirthPermanentStats() {
@@ -574,8 +585,8 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
 
     function jumpToBossWave(targetWave) {
         wave = targetWave; enemies = []; enemyBullets = []; enemiesToSpawn = 0; inShop = false; gameOver = false;
-        document.getElementById('shop-modal').style.display = 'none';
-        document.getElementById('game-over-modal').style.display = 'none';
+        $id('shop-modal').style.display = 'none';
+        $id('game-over-modal').style.display = 'none';
         player.health = player.maxHealth; player.shield = player.maxShield;
         startWave();
     }
@@ -585,14 +596,14 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
     function checkHighScore() {
         let savedScore = (()=>{try{return localStorage.getItem('blocknite_max_wave')}catch(e){return null}})() || 1;
         if (wave > savedScore) { savedScore = wave; try{localStorage.setItem('blocknite_max_wave', savedScore)}catch(e){} }
-        document.getElementById('best-score-text').innerText = `Oleada Máxima: ${savedScore}`;
+        $id('best-score-text').innerText = `Oleada Máxima: ${savedScore}`;
     }
 
     function switchWeapon(w) {
         if (!unlockedWeapons[w]) return;
         currentWeapon = w;
         document.querySelectorAll('.weapon-btn').forEach(btn => btn.classList.remove('active'));
-        document.getElementById(`w-${w}`).classList.add('active');
+        $id(`w-${w}`).classList.add('active');
     }
 
     function triggerSiphon() {
@@ -603,7 +614,7 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
         siphonReady = false;
         const effectiveCD = Math.max(5, siphonCooldown - (rebirthUpgrades.trunkSiphon * 3));
         siphonTimer = effectiveCD;
-        document.getElementById('siphon-cd').style.height = '100%';
+        $id('siphon-cd').style.height = '100%';
 
         const stolenHp = targetBoss.maxHealth * 0.05;
         targetBoss.health -= stolenHp;
@@ -619,7 +630,7 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
     function triggerShockwave() {
         if (!isShockwaveReady) return;
         isShockwaveReady = false; shockwaveKills = 0;
-        document.getElementById('shockwave-cd').style.height = '100%';
+        $id('shockwave-cd').style.height = '100%';
         triggerScreenShake(0.3);
         activeShockwaves.push({ x: player.x, y: player.y, radius: player.radius, maxRadius: 380, speed: 600 });
 
@@ -665,26 +676,27 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
     }
 
     function updateSkillCD(dt) {
+ if (selectedSubclass === "Singularidad Temporal") dt /= 0.7;
         if(!skillReady) {
             skillTimer -= dt;
-            document.getElementById('skill-cd').style.height = `${Math.max(0, (skillTimer / skillCooldown) * 100)}%`;
-            if(skillTimer <= 0) { skillReady = true; document.getElementById('skill-cd').style.height = '0%'; }
+            $id('skill-cd').style.height = `${Math.max(0, (skillTimer / skillCooldown) * 100)}%`;
+            if(skillTimer <= 0) { skillReady = true; $id('skill-cd').style.height = '0%'; }
         }
         if(!mineReady) {
             mineTimer -= dt;
-            document.getElementById('mine-cd').style.height = `${Math.max(0, (mineTimer / mineCooldown) * 100)}%`;
-            if(mineTimer <= 0) { mineReady = true; document.getElementById('mine-cd').style.height = '0%'; }
+            $id('mine-cd').style.height = `${Math.max(0, (mineTimer / mineCooldown) * 100)}%`;
+            if(mineTimer <= 0) { mineReady = true; $id('mine-cd').style.height = '0%'; }
         }
         if(!turretReady) {
             turretTimer -= dt;
-            document.getElementById('turret-cd').style.height = `${Math.max(0, (turretTimer / turretCooldown) * 100)}%`;
-            if(turretTimer <= 0) { turretReady = true; document.getElementById('turret-cd').style.height = '0%'; }
+            $id('turret-cd').style.height = `${Math.max(0, (turretTimer / turretCooldown) * 100)}%`;
+            if(turretTimer <= 0) { turretReady = true; $id('turret-cd').style.height = '0%'; }
         }
         if(!siphonReady) {
             siphonTimer -= dt;
             const effectiveCD = Math.max(5, siphonCooldown - (rebirthUpgrades.trunkSiphon * 3));
-            document.getElementById('siphon-cd').style.height = `${Math.max(0, (siphonTimer / effectiveCD) * 100)}%`;
-            if(siphonTimer <= 0) { siphonReady = true; document.getElementById('siphon-cd').style.height = '0%'; }
+            $id('siphon-cd').style.height = `${Math.max(0, (siphonTimer / effectiveCD) * 100)}%`;
+            if(siphonTimer <= 0) { siphonReady = true; $id('siphon-cd').style.height = '0%'; }
         }
     }
 
@@ -704,22 +716,22 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
 
     function triggerFrenzy() {
         isFrenzyActive = true; frenzyTimer = FRENZY_DURATION; killsForFrenzy = 0; enemyBullets = [];
-        document.getElementById('frenzy-banner').classList.add('active');
+        $id('frenzy-banner').classList.add('active');
         for(let i=0; i<50; i++) particles.push(new Particle(player.x, player.y, `hsl(${Math.random()*360}, 100%, 50%)`));
     }
 
     function updateFrenzy(dt) {
         if(isFrenzyActive) {
             frenzyTimer -= dt;
-            document.getElementById('frenzy-fill').style.width = `${(frenzyTimer / FRENZY_DURATION) * 100}%`;
-            document.getElementById('frenzy-text').innerText = `¡SOBRECARGA! (${Math.ceil(frenzyTimer)}s)`;
+            $id('frenzy-fill').style.width = `${(frenzyTimer / FRENZY_DURATION) * 100}%`;
+            $id('frenzy-text').innerText = `¡SOBRECARGA! (${Math.ceil(frenzyTimer)}s)`;
             if(frenzyTimer <= 0) {
-                isFrenzyActive = false; document.getElementById('frenzy-banner').classList.remove('active'); updateHUD();
+                isFrenzyActive = false; $id('frenzy-banner').classList.remove('active'); updateHUD();
             }
         }
         if(activePowerUp) {
             powerUpTimer -= dt;
-            if(powerUpTimer <= 0) { activePowerUp = null; document.getElementById('powerup-banner').classList.remove('active'); }
+            if(powerUpTimer <= 0) { activePowerUp = null; $id('powerup-banner').classList.remove('active'); }
         }
 
         if(Date.now() - player.lastDamageTime > 4000 && player.shield < player.maxShield) {
@@ -755,10 +767,7 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
             else type = 'tank';
         }
 
-        let difficultyFactor = 1.0 + (rebirthCount * 0.45);
-        if (wave >= 8) difficultyFactor += (wave - 7) * 0.08;
-
-        const baseHpScaling = (22 + (wave * 28)) * difficultyFactor;
+        const sw_ = raidActive ? Math.max(wave, 15) : wave; let difficultyFactor = 1.0 + (rebirthCount * 0.45); if (sw_ >= 8) difficultyFactor += (sw_ - 7) * 0.08; const baseHpScaling = (22 + (sw_ * 28)) * difficultyFactor;
 
         let enemy = {
             x: x, y: y, type: type,
@@ -796,17 +805,13 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
         if (!enemy || enemy.isShielded) return;
 
         if (selectedTankClass === 'obsidian') {
-            enemy.burnTicks = 4;
+            enemy.burnTicks = 4; if (selectedSubclass === 'Titán Forjainferno' && Math.random() < 0.2) { for (const o of enemies) if (o !== enemy && Math.hypot(o.x - enemy.x, o.y - enemy.y) < 90) o.health -= player.damage * 0.4; for (let i = 0; i < 8; i++) particles.push(new Particle(enemy.x, enemy.y, '#f97316')); }
         } else if (selectedTankClass === 'arcane') {
-            enemies.forEach(other => {
-                if (other !== enemy && Math.hypot(other.x - enemy.x, other.y - enemy.y) < 160) {
-                    other.health -= player.damage * 0.3;
-                    for (let i = 0; i < 3; i++) particles.push(new Particle(other.x, other.y, '#a855f7'));
-                }
-            });
+            let n = selectedSubclass === 'Leviatán Tormenta' ? 4 : 2;
+ for (const other of enemies) { if (n <= 0) break; if (other !== enemy && Math.hypot(other.x - enemy.x, other.y - enemy.y) < 160) { other.health -= player.damage * (selectedSubclass === 'Leviatán Tormenta' ? 0.5 : 0.3); n--; for (let i = 0; i < 3; i++) particles.push(new Particle(other.x, other.y, '#a855f7')); } }
         } else if (selectedTankClass === 'devourer') {
             enemy.poisonTicks = 5;
-            enemy.speed *= 0.8;
+            if(!enemy.slowed){enemy.slowed=true;enemy.speed*=0.8;}
         }
     }
 
@@ -832,7 +837,8 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
 
         const dmgMult = 1.0 + (rebirthUpgrades.branchesDmg * 0.2);
 
-        if(currentWeapon === 1) {
+        if (selectedSubclass === 'Behemoth Hidra') for (const s of [-1.5708, 1.5708]) playerBullets.push({x:player.x,y:player.y,dx:Math.cos(baseAngle+s)*9,dy:Math.sin(baseAngle+s)*9,radius:4,damage:player.damage*dmgMult*0.4,color:'#84cc16',piercing:false});
+ if(currentWeapon === 1) {
             const numCañones = Math.min(3, player.cannons);
             const spread = 0.16;
             const startAngle = baseAngle - ((numCañones - 1) * spread) / 2;
@@ -995,6 +1001,7 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
     }
 
     function damagePlayer(dmg) {
+ if (selectedSubclass === "Bastión Inamovible") dmg *= 0.75;
         if (iFrameTimer > 0) return;
 
         iFrameTimer = 0.8;
@@ -1013,6 +1020,7 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
     }
 
     function startWave() {
+ gameStarted = true;
         if (wave % 10 === 0) {
             enemiesToSpawn = 0; enemiesAlive = 1;
             const bossTypes = ['boss_fire', 'boss_electric', 'boss_wind', 'boss_water', 'boss_galactic', 'boss_earth', 'boss_toxic', 'boss_omega', 'boss_shenlong'];
@@ -1027,60 +1035,58 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
         updateHUD();
     }
 
-    function updateHUD() {
-        document.getElementById('shield-text').innerText = `${Math.ceil(player.shield)}/${player.maxShield}`;
-        document.getElementById('shield-fill').style.width = `${Math.max(0, (player.shield / player.maxShield) * 100)}%`;
+    let _hq=false;function updateHUD(){if(_hq)return;_hq=true;requestAnimationFrame(()=>{_hq=false;renderHUD();});}
+function renderHUD() {
+        $id('shield-text').innerText = `${Math.ceil(player.shield)}/${player.maxShield}`;
+        $id('shield-fill').style.width = `${Math.max(0, (player.shield / player.maxShield) * 100)}%`;
 
-        document.getElementById('hp-text').innerText = `${Math.ceil(player.health)}/${player.maxHealth}`;
-        document.getElementById('health-fill').style.width = `${Math.max(0, (player.health / player.maxHealth) * 100)}%`;
+        $id('hp-text').innerText = `${Math.ceil(player.health)}/${player.maxHealth}`;
+        $id('health-fill').style.width = `${Math.max(0, (player.health / player.maxHealth) * 100)}%`;
 
-        document.getElementById('shockwave-text').innerText = isShockwaveReady ? "¡LISTO!" : `${shockwaveKills}/${SHOCKWAVE_MAX_KILLS}`;
-        document.getElementById('shockwave-fill').style.width = `${(shockwaveKills / SHOCKWAVE_MAX_KILLS) * 100}%`;
+        $id('shockwave-text').innerText = isShockwaveReady ? "¡LISTO!" : `${shockwaveKills}/${SHOCKWAVE_MAX_KILLS}`;
+        $id('shockwave-fill').style.width = `${(shockwaveKills / SHOCKWAVE_MAX_KILLS) * 100}%`;
 
-        document.getElementById('siphon-text').innerText = siphonReady ? "LISTO" : `${Math.ceil(siphonTimer)}s`;
-        document.getElementById('rebirth-level-text').innerText = `Renacimiento: ${rebirthCount}`;
+        $id('siphon-text').innerText = siphonReady ? "LISTO" : `${Math.ceil(siphonTimer)}s`;
+        $id('rebirth-level-text').innerText = `Renacimiento: ${rebirthCount}`;
 
-        document.getElementById('turret-hud-name').innerText = `TORRETA (${turrets.length}/${maxTurretsAllowed})`;
+        $id('turret-hud-name').innerText = `TORRETA (${turrets.length}/${maxTurretsAllowed})`;
 
         const reqKills = getRequiredKills();
         if (!isFrenzyActive) {
-            document.getElementById('frenzy-fill').style.width = `${(killsForFrenzy / reqKills) * 100}%`;
-            document.getElementById('frenzy-text').innerText = `${killsForFrenzy}/${reqKills}`;
+            $id('frenzy-fill').style.width = `${(killsForFrenzy / reqKills) * 100}%`;
+            $id('frenzy-text').innerText = `${killsForFrenzy}/${reqKills}`;
         }
 
-        document.getElementById('gold-text').innerText = `$${gold}`;
+        $id('gold-text').innerText = `$${gold}`;
         
         let titleTag = `Oleada ${wave}`;
-        if (wave % 10 === 0) titleTag += ' (¡JEFE COLOSAL!)';
-        document.getElementById('wave-text').innerText = titleTag;
-        document.getElementById('enemies-text').innerText = `Enemigos restantes: ${enemiesAlive}`;
+        if (raidActive) titleTag = '🐉 INCURSIÓN SHENLONG'; else if (wave % 10 === 0) titleTag += ' (¡JEFE COLOSAL!)';
+        $id('wave-text').innerText = titleTag;
+        $id('enemies-text').innerText = `Enemigos restantes: ${enemiesAlive}`;
 
         let phaseName = chassisNames[chassisLevel - 1];
         if (isSupremeForm) phaseName = "⚡ OVERCLOCK ALFA SUPREMO";
         else if (selectedSubclass) phaseName = `${selectedSubclass}`;
         else if (selectedTankClass) phaseName = `Clase ${selectedTankClass.toUpperCase()}`;
 
-        document.getElementById('evo-text').innerText = phaseName;
+        $id('evo-text').innerText = phaseName;
 
-        document.getElementById('evolution-tree-section').style.display = (chassisLevel >= 3 && !selectedTankClass) ? 'block' : 'none';
-        document.getElementById('subclass-section').style.display = (chassisLevel >= 4 && selectedTankClass && !selectedSubclass) ? 'block' : 'none';
-        document.getElementById('supreme-section').style.display = (chassisLevel >= 5 && selectedSubclass && !isSupremeForm) ? 'block' : 'none';
+        $id('evolution-tree-section').style.display = (chassisLevel >= 3 && !selectedTankClass) ? 'block' : 'none';
+        $id('subclass-section').style.display = (chassisLevel >= 4 && selectedTankClass && !selectedSubclass) ? 'block' : 'none';
+        $id('supreme-section').style.display = (chassisLevel >= 5 && selectedSubclass && !isSupremeForm) ? 'block' : 'none';
     }
 
     function updateAdvisorText() {
-        const advisor = document.getElementById('advisor-banner');
+        const advisor = $id('advisor-banner');
         if (wave < 10) advisor.innerText = "💡 CONSEJO TÁCTICO: Compra 'Espinas Neón' para eliminar scouts rápidamente sin gastar munición.";
         else if (wave < 20) advisor.innerText = "💡 CONSEJO TÁCTICO: El Leviatán Eléctrico es muy veloz. Prioriza mejorar la velocidad del motor.";
         else if (wave < 40) advisor.innerText = "💡 CONSEJO TÁCTICO: Prepara el Drenaje Vampírico (Tecla F) contra los Jefes para curarte 5% de su HP máximo.";
         else advisor.innerText = "💡 CONSEJO TÁCTICO: Evoluciona al Chasis Mk. III y escoge tu Clase en el árbol de evoluciones.";
     }
 
-    let lastTime = performance.now();
-    function update() {
-        const now = performance.now();
-        const dt = Math.min((now - lastTime) / 1000, 0.1);
-        lastTime = now;
-        if (inShop || gameOver) return;
+    let paused=false,gameStarted=false,raidActive=false;
+function update(dt) {
+        if (inShop || gameOver || paused) return;
 
         if (iFrameTimer > 0) iFrameTimer -= dt;
         if (screenShakeTimer > 0) screenShakeTimer -= dt;
@@ -1130,7 +1136,7 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
             if (hp.progress >= 1) {
                 triggerScreenShake(0.2);
                 for(let i=0; i<20; i++) particles.push(new Particle(hp.x, hp.y, '#f97316'));
-                enemies.forEach((e) => {
+                [...enemies].forEach((e) => {
                     if (Math.hypot(e.x - hp.x, e.y - hp.y) < 120 && !e.isShielded) {
                         e.health -= hp.damage;
                         if (e.health <= 0) onEnemyKilled(e);
@@ -1146,7 +1152,7 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
             bh.x += bh.dx * 0.95; bh.y += bh.dy * 0.95;
             if(bh.radius < bh.maxRadius) bh.radius += dt * 35;
 
-            enemies.forEach((e) => {
+            [...enemies].forEach((e) => {
                 const dist = Math.hypot(bh.x - e.x, bh.y - e.y);
                 if (dist < 300) {
                     const angle = Math.atan2(bh.y - e.y, bh.x - e.x);
@@ -1181,7 +1187,7 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
                 for(let i=0; i<18; i++) particles.push(new Particle(mw.x, mw.y, Math.random()<0.5 ? '#ef4444' : '#f59e0b'));
 
                 if (Math.hypot(player.x - mw.x, player.y - mw.y) < mw.radius && !isFrenzyActive) damagePlayer(40);
-                enemies.forEach((e) => {
+                [...enemies].forEach((e) => {
                     if (Math.hypot(e.x - mw.x, e.y - mw.y) < mw.radius) {
                         e.health -= 180;
                         if (e.health <= 0) onEnemyKilled(e);
@@ -1233,7 +1239,7 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
             const pu = powerUps[index];
             if (Math.hypot(player.x - pu.x, player.y - pu.y) < player.radius + pu.radius) {
                 activePowerUp = pu.type; powerUpTimer = 5;
-                const banner = document.getElementById('powerup-banner');
+                const banner = $id('powerup-banner');
                 if (pu.type === 'freeze') banner.innerText = '🧊 ¡CONGELACIÓN ENEMIGA ACTIVADA!';
                 if (pu.type === 'magnet') { banner.innerText = '🧲 ¡IMÁN DE CRÉDITOS ACTIVADO!'; gold += 100; updateHUD(); }
                 if (pu.type === 'piercing') banner.innerText = '⚡ ¡DISPARO PERFORANTE ACTIVADO!';
@@ -1242,22 +1248,13 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
         }
 
         for (let mIndex = mines.length - 1; mIndex >= 0; mIndex--) {
-            const m = mines[mIndex];
-            enemies.forEach(e => {
-                if (Math.hypot(m.x - e.x, m.y - e.y) < m.triggerRadius) {
-                    for(let i=0; i<20; i++) particles.push(new Particle(m.x, m.y, '#ef4444'));
-                    enemies.forEach((eSub) => {
-                        if (Math.hypot(m.x - eSub.x, m.y - eSub.y) < 130 && !eSub.isShielded) {
-                            eSub.health -= m.damage;
-                            if (eSub.health <= 0) onEnemyKilled(eSub);
-                        }
-                    });
-                    mines.splice(mIndex, 1);
-                }
-            });
-        }
-
-        for (let index = playerBullets.length - 1; index >= 0; index--) {
+ const m = mines[mIndex];
+ if (!enemies.some(e => Math.hypot(m.x - e.x, m.y - e.y) < m.triggerRadius)) continue;
+ mines.splice(mIndex, 1);
+ for (let i = 0; i < 20; i++) particles.push(new Particle(m.x, m.y, '#ef4444'));
+ [...enemies].forEach(s => { if (Math.hypot(m.x - s.x, m.y - s.y) < 130 && !s.isShielded) { s.health -= m.damage; if (s.health <= 0) onEnemyKilled(s); } });
+}
+for (let index = playerBullets.length - 1; index >= 0; index--) {
             const b = playerBullets[index];
             b.x += b.dx; b.y += b.dy;
             if (b.isFlame) {
@@ -1293,7 +1290,7 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
         }
 
         for (let eIndex = enemies.length - 1; eIndex >= 0; eIndex--) {
-            const e = enemies[eIndex];
+            const e = enemies[eIndex]; if (!e) continue; if (e.health <= 0) { onEnemyKilled(e); continue; }
             const distToPlayer = Math.hypot(player.x - e.x, player.y - e.y);
             const angle = Math.atan2(player.y - e.y, player.x - e.x);
 
@@ -1363,8 +1360,8 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
                 }
 
                 if (isFrenzyActive) {
-                    e.health = 0; onEnemyKilled(e); continue;
-                } else {
+ if (e.type.startsWith('boss_')) e.health -= e.maxHealth * 0.0006; else { e.health = 0; onEnemyKilled(e); continue; }
+ } else {
                     damagePlayer(e.damage * (e.type === 'kamikaze' || e.type.startsWith('minion_') ? 1.0 : 0.05));
                     if (e.type === 'kamikaze' || e.type.startsWith('minion_')) { e.health = 0; onEnemyKilled(e); continue; }
                 }
@@ -1430,15 +1427,14 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
             return;
         }
 
-        enemiesAlive--;
-        gold += e.goldValue;
+        const wasRaid = raidActive && e.type === "boss_shenlong"; enemiesAlive--; gold += e.goldValue; if (selectedSubclass === "Cazador Voraz") player.shield = Math.min(player.maxShield, player.shield + 6);
         droppedCoins.push({ x: e.x, y: e.y, val: Math.floor(e.goldValue * 0.4) });
 
         if (!isShockwaveReady) {
             shockwaveKills++;
             if (shockwaveKills >= SHOCKWAVE_MAX_KILLS) {
                 isShockwaveReady = true;
-                document.getElementById('shockwave-cd').style.height = '0%';
+                $id('shockwave-cd').style.height = '0%';
             }
         }
 
@@ -1449,9 +1445,10 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
 
         for(let i=0; i<10; i++) particles.push(new Particle(e.x, e.y, e.color));
         enemies.splice(idx, 1);
+ if (e.type.startsWith("boss_")) { for (let i = enemies.length - 1; i >= 0; i--) if (enemies[i].type.startsWith("minion_")) { enemies.splice(i, 1); enemiesAlive--; } if (wasRaid) { raidActive = false; gold += 2500; rebirthSeeds++; saveRebirth(); } }
         updateHUD();
 
-        if ((e.type === 'boss_shenlong' || e.type === 'boss_omega') && wave >= 80) {
+        if (!wasRaid && (e.type === 'boss_shenlong' || e.type === 'boss_omega') && wave >= 80) {
             setTimeout(openRebirthModal, 500);
             return;
         }
@@ -1463,9 +1460,9 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
     }
 
     function openRebirthModal() {
-        rebirthSeeds += 3;
-        document.getElementById('rebirth-seeds-count').innerText = `Semillas de Renacimiento: ${rebirthSeeds}`;
-        document.getElementById('rebirth-modal').style.display = 'flex';
+        rebirthSeeds += 3; inShop = true; saveRebirth();
+        $id('rebirth-seeds-count').innerText = `Semillas de Renacimiento: ${rebirthSeeds}`;
+        $id('rebirth-modal').style.display = 'flex';
     }
 
     function buyRebirthUpgrade(type) {
@@ -1475,174 +1472,17 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
 
         if (rebirthSeeds >= cost) {
             rebirthSeeds -= cost;
-            rebirthUpgrades[type]++;
-            document.getElementById(`lvl-${type}`).innerText = rebirthUpgrades[type];
-            document.getElementById('rebirth-seeds-count').innerText = `Semillas de Renacimiento: ${rebirthSeeds}`;
+            rebirthUpgrades[type]++; saveRebirth();
+            $id(`lvl-${type}`).innerText = rebirthUpgrades[type];
+            $id('rebirth-seeds-count').innerText = `Semillas de Renacimiento: ${rebirthSeeds}`;
         }
     }
 
     function confirmRebirthAndStart() {
-        rebirthCount++;
-        wave = 1;
-        document.getElementById('rebirth-modal').style.display = 'none';
+        rebirthCount++; wave = 1; inShop = false; saveRebirth();
+        $id('rebirth-modal').style.display = 'none';
         applyRebirthPermanentStats();
         startWave();
-    }
-
-    function drawShenlongBoss(e) {
-        const isSuper = e.isPhase2;
-        ctx.strokeStyle = isSuper ? '#FEF08A' : '#34D399'; ctx.lineWidth = 3; ctx.fillStyle = isSuper ? '#78350F' : '#064E3B';
-
-        ctx.save();
-
-        [-1, 1].forEach(side => {
-            const count = isSuper ? 4 : 3;
-            for(let p = 0; p < count; p++) {
-                ctx.fillStyle = isSuper ? '#B45309' : '#047857'; ctx.strokeStyle = isSuper ? '#FEF08A' : '#6EE7B7';
-                ctx.beginPath();
-                ctx.moveTo(-30, side * (20 + p * 20));
-                ctx.lineTo(-120 - p * 20, side * (60 + p * 25));
-                ctx.lineTo(-15, side * (50 + p * 20));
-                ctx.closePath(); ctx.fill(); ctx.stroke();
-            }
-        });
-
-        ctx.fillStyle = isSuper ? '#FEF08A' : '#10B981'; ctx.strokeStyle = isSuper ? '#F59E0B' : '#047857';
-        ctx.beginPath();
-        ctx.moveTo(80, 0); ctx.lineTo(30, -70); ctx.lineTo(-60, -60); ctx.lineTo(-90, 0); ctx.lineTo(-60, 60); ctx.lineTo(30, 70);
-        ctx.closePath(); ctx.fill(); ctx.stroke();
-
-        ctx.fillStyle = isSuper ? '#EF4444' : '#F59E0B'; ctx.strokeStyle = '#FEF08A'; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.arc(0, 0, 26, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-
-        ctx.fillStyle = '#FEF08A';
-        ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fill();
-
-        ctx.fillStyle = isSuper ? '#F59E0B' : '#D97706'; ctx.strokeStyle = isSuper ? '#FEF08A' : '#FDE047';
-        ctx.beginPath(); ctx.moveTo(45, -40); ctx.lineTo(120, -95); ctx.lineTo(75, -30); ctx.closePath(); ctx.fill(); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(45, 40); ctx.lineTo(120, 95); ctx.lineTo(75, 30); ctx.closePath(); ctx.fill(); ctx.stroke();
-
-        ctx.fillStyle = '#EF4444';
-        ctx.beginPath(); ctx.arc(55, -20, 8, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(55, 20, 8, 0, Math.PI * 2); ctx.fill();
-
-        ctx.restore();
-    }
-
-    function drawOmegaShenronBoss(e) {
-        const is7Balls = e.isPhase2;
-        ctx.strokeStyle = is7Balls ? '#DC2626' : '#991B1B'; ctx.lineWidth = 3; ctx.fillStyle = is7Balls ? '#450A0A' : '#0f172a';
-
-        ctx.save();
-
-        [-1, 1].forEach(side => {
-            for(let p = 0; p < 4; p++) {
-                ctx.fillStyle = is7Balls ? '#7f1d1d' : '#1e293b'; ctx.strokeStyle = '#EF4444';
-                ctx.beginPath();
-                ctx.moveTo(-20, side * (15 + p * 18));
-                ctx.lineTo(-80 - p * 15, side * (45 + p * 22));
-                ctx.lineTo(-10, side * (35 + p * 18));
-                ctx.closePath(); ctx.fill(); ctx.stroke();
-            }
-        });
-
-        ctx.fillStyle = is7Balls ? '#18181b' : '#27272a'; ctx.strokeStyle = is7Balls ? '#EF4444' : '#71717a';
-        ctx.beginPath();
-        ctx.moveTo(60, 0); ctx.lineTo(20, -50); ctx.lineTo(-40, -45); ctx.lineTo(-60, 0); ctx.lineTo(-40, 45); ctx.lineTo(20, 50);
-        ctx.closePath(); ctx.fill(); ctx.stroke();
-
-        const ballCount = is7Balls ? 7 : 1;
-        const radiusDist = 28;
-        for (let b = 0; b < ballCount; b++) {
-            ctx.save();
-            const bAngle = (Math.PI * 2 / ballCount) * b;
-            const bx = ballCount === 1 ? 0 : Math.cos(bAngle) * radiusDist;
-            const by = ballCount === 1 ? 0 : Math.sin(bAngle) * radiusDist;
-
-            ctx.fillStyle = '#f59e0b'; ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 1.5;
-            ctx.beginPath(); ctx.arc(bx, by, is7Balls ? 8 : 14, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-            
-            ctx.fillStyle = '#ef4444';
-            ctx.beginPath(); ctx.arc(bx, by, is7Balls ? 2.5 : 4, 0, Math.PI * 2); ctx.fill();
-            ctx.restore();
-        }
-
-        ctx.fillStyle = '#EF4444';
-        ctx.beginPath(); ctx.arc(42, -15, 6, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(42, 15, 6, 0, Math.PI * 2); ctx.fill();
-
-        ctx.restore();
-    }
-
-    function drawDetailedPolygonalDragon(e, darkColor, primaryColor, accentColor, eyeColor) {
-        ctx.strokeStyle = primaryColor; ctx.lineWidth = 2.5; ctx.fillStyle = darkColor;
-        const wingSpan = 145; const wingFlap = Math.sin((e.animTick || 0) * 3) * 20;
-
-        [-1, 1].forEach(side => {
-            ctx.beginPath(); ctx.moveTo(0, side * 20); ctx.lineTo(45, side * (80 + wingFlap));
-            ctx.lineTo(wingSpan, side * (120 + wingFlap)); ctx.lineTo(85, side * (150 + wingFlap));
-            ctx.lineTo(30, side * (110 + wingFlap)); ctx.lineTo(-25, side * (70 + wingFlap));
-            ctx.lineTo(-50, side * (25)); ctx.closePath(); ctx.fill(); ctx.stroke();
-
-            ctx.beginPath(); ctx.moveTo(45, side * (80 + wingFlap)); ctx.lineTo(85, side * (150 + wingFlap));
-            ctx.moveTo(45, side * (80 + wingFlap)); ctx.lineTo(30, side * (110 + wingFlap)); ctx.stroke();
-        });
-
-        ctx.fillStyle = darkColor;
-        ctx.beginPath(); ctx.moveTo(-90, 0); ctx.lineTo(-40, -45); ctx.lineTo(25, -35); ctx.lineTo(70, 0); ctx.lineTo(25, 35); ctx.lineTo(-40, 45);
-        ctx.closePath(); ctx.fill(); ctx.stroke();
-
-        ctx.fillStyle = accentColor;
-        ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(25, -15); ctx.lineTo(40, 0); ctx.lineTo(25, 15); ctx.closePath(); ctx.fill();
-
-        ctx.fillStyle = primaryColor;
-        ctx.beginPath(); ctx.moveTo(45, -28); ctx.lineTo(110, -12); ctx.lineTo(125, 0); ctx.lineTo(110, 12); ctx.lineTo(45, 28); ctx.closePath(); ctx.fill(); ctx.stroke();
-
-        ctx.fillStyle = accentColor; ctx.fillRect(70, -18, 22, 6); ctx.fillRect(70, 12, 22, 6);
-        ctx.beginPath(); ctx.moveTo(50, -22); ctx.lineTo(20, -70); ctx.lineTo(35, -70); ctx.lineTo(55, -20); ctx.closePath(); ctx.fill(); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(50, 22); ctx.lineTo(20, 70); ctx.lineTo(35, 70); ctx.lineTo(55, 20); ctx.closePath(); ctx.fill(); ctx.stroke();
-
-        ctx.strokeStyle = accentColor; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(105, -10); ctx.lineTo(135, -45); ctx.lineTo(165, -30); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(105, 10); ctx.lineTo(135, 45); ctx.lineTo(165, 30); ctx.stroke();
-
-        ctx.fillStyle = eyeColor; ctx.beginPath(); ctx.arc(85, -10, 5, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(85, 10, 5, 0, Math.PI * 2); ctx.fill();
-    }
-
-    function drawColossalLeviathan(e, darkColor, primaryColor, accentColor, eyeColor) {
-        ctx.lineWidth = 3;
-
-        for (let i = 8; i >= 1; i--) {
-            const wave = Math.sin((e.animTick || 0) * 2.2 + i * 0.7) * 28;
-            const segRadius = 42 - (i * 2.5);
-            ctx.save(); ctx.translate(-30 - (i * 26), wave);
-            
-            ctx.fillStyle = accentColor; ctx.strokeStyle = primaryColor;
-            ctx.beginPath(); ctx.moveTo(0, -segRadius - 16); ctx.lineTo(14, -segRadius); ctx.lineTo(-14, -segRadius); ctx.closePath(); ctx.fill(); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(0, segRadius + 16); ctx.lineTo(14, segRadius); ctx.lineTo(-14, segRadius); ctx.closePath(); ctx.fill(); ctx.stroke();
-
-            ctx.fillStyle = i % 2 === 0 ? darkColor : primaryColor;
-            ctx.beginPath(); ctx.arc(0, 0, segRadius, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.restore();
-        }
-
-        ctx.fillStyle = darkColor; ctx.strokeStyle = primaryColor;
-        ctx.beginPath(); ctx.moveTo(10, -55); ctx.lineTo(115, -28); ctx.lineTo(138, 0); ctx.lineTo(115, 28); ctx.lineTo(10, 55); ctx.closePath(); ctx.fill(); ctx.stroke();
-
-        [-1, 1].forEach(side => {
-            for (let t = 0; t < 3; t++) {
-                ctx.save(); ctx.translate(130, side * (8 + t * 10));
-                for (let r = 0; r < 6; r++) {
-                    const tAngle = side * (0.3 + Math.sin((e.animTick || 0) * 3.5 + r * 0.5 + t) * 0.3);
-                    ctx.rotate(tAngle); ctx.fillStyle = r % 2 === 0 ? accentColor : '#0f172a'; ctx.strokeStyle = primaryColor;
-                    ctx.fillRect(0, 0, 15, 5); ctx.strokeRect(0, 0, 15, 5); ctx.translate(15, 0);
-                }
-                ctx.restore();
-            }
-        });
-
-        ctx.fillStyle = eyeColor; ctx.beginPath(); ctx.arc(90, -18, 7, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(90, 18, 7, 0, Math.PI * 2); ctx.fill();
     }
 
     function drawBossNamed(e){
@@ -1825,7 +1665,7 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
             if (id !== playerId) {
                 const p = otherPlayers[id];
                 ctx.save();
-                ctx.translate(p.x - camX, p.y - camY);
+                const g = (ghosts[id] = ghosts[id] || { x: p.x, y: p.y }); g.x += (p.x - g.x) * 0.25; g.y += (p.y - g.y) * 0.25; ctx.translate(g.x - camX, g.y - camY);
 
                 // Tanque Aliado
                 ctx.fillStyle = p.isSupreme ? '#f59e0b' : '#38bdf8';
@@ -2004,28 +1844,7 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
                 const bAngle = Math.atan2(player.y - e.y, player.x - e.x);
                 ctx.rotate(bAngle);
 
-                if (drawBossNamed(e)) {} else if (e.type === 'boss_fire') drawDetailedPolygonalDragon(e, '#450A0A', '#EF4444', '#F97316', '#FEF08A');
-                else if (e.type === 'boss_electric') drawColossalLeviathan(e, '#451A03', '#78350F', '#FACC15', '#FEF08A');
-                else if (e.type === 'boss_wind') drawDetailedPolygonalDragon(e, '#064E3B', '#34D399', '#10B981', '#A7F3D0');
-                else if (e.type === 'boss_water') drawColossalLeviathan(e, '#075985', '#0369A1', '#38BDF8', '#E0F2FE');
-                else if (e.type === 'boss_galactic') drawColossalLeviathan(e, '#3B0764', '#581C87', '#C084FC', '#F3E8FF');
-                else if (e.type === 'boss_earth') {
-                    ctx.fillStyle = '#78350F'; ctx.strokeStyle = '#F59E0B'; ctx.lineWidth = 3;
-                    const armCount = e.isPhase2 ? 4 : 2;
-                    for(let a=0; a<armCount; a++) {
-                        ctx.save();
-                        const aAngle = (Math.PI / 2) * a - 0.5;
-                        ctx.rotate(aAngle);
-                        ctx.fillRect(40, -15, 60, 30); ctx.strokeRect(40, -15, 60, 30);
-                        ctx.restore();
-                    }
-                    ctx.beginPath();
-                    ctx.moveTo(-75, 0); ctx.lineTo(-50, -55); ctx.lineTo(35, -45); ctx.lineTo(75, 0); ctx.lineTo(35, 45); ctx.lineTo(-50, 55);
-                    ctx.closePath(); ctx.fill(); ctx.stroke();
-                }
-                else if (e.type === 'boss_toxic') drawDetailedPolygonalDragon(e, '#14532D', '#84CC16', '#22C55E', '#ECFCCB');
-                else if (e.type === 'boss_omega') drawOmegaShenronBoss(e);
-                else if (e.type === 'boss_shenlong') drawShenlongBoss(e);
+                drawBossNamed(e);
 
                 ctx.restore();
             } else if (e.type.startsWith('minion_')) {
@@ -2043,6 +1862,7 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
         });
 
         particles.forEach(p => p.draw(camX, camY));
+ if (paused) { ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = '#fff'; ctx.font = '700 40px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('PAUSA (P)', canvas.width / 2, canvas.height / 2); }
         drawRadar();
         ctx.restore();
     }
@@ -2064,48 +1884,49 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
         });
     }
 
-    function loop() { update(); draw(); requestAnimationFrame(loop); }
+    let _acc=0,_lt=performance.now();
+function loop(){const n=performance.now();_acc+=Math.min(0.1,(n-_lt)/1000);_lt=n;while(_acc>=1/60){update(1/60);_acc-=1/60;}draw();requestAnimationFrame(loop);}
 
     function openShop() {
         inShop = true;
         updateAdvisorText();
-        document.getElementById('shop-gold').innerText = `Créditos: $${gold}`;
-        document.getElementById('shop-modal').style.display = 'flex';
+        $id('shop-gold').innerText = `Créditos: $${gold}`;
+        $id('shop-modal').style.display = 'flex';
         updateShopButtons();
     }
 
     function updateShopButtons() {
         for (let key in costs) {
-            const btnEl = document.getElementById(`cost-${key}`);
+            const btnEl = $id(`cost-${key}`);
             if(btnEl) {
                 const btn = btnEl.parentElement;
-                btn.disabled = gold < costs[key];
+                btn.disabled = gold < costs[key] || (key === "globalMagnet" && hasGlobalMagnet);
             }
         }
 
-        const turretBtn = document.getElementById('btn-turret-upgrade');
+        const turretBtn = $id('btn-turret-upgrade');
         if (maxTurretsAllowed >= MAX_TURRETS) {
             turretBtn.disabled = true;
-            document.getElementById('cost-turretLimit').innerText = "MÁXIMO ALCANZADO";
+            $id('cost-turretLimit').innerText = "MÁXIMO ALCANZADO";
         } else {
-            document.getElementById('turret-count-label').innerText = `Máx ${maxTurretsAllowed}/${MAX_TURRETS}`;
+            $id('turret-count-label').innerText = `Máx ${maxTurretsAllowed}/${MAX_TURRETS}`;
         }
 
         for (let w = 4; w <= 7; w++) {
-            const btn = document.getElementById(`cost-weapon-${w}`).parentElement;
+            const btn = $id(`cost-weapon-${w}`).parentElement;
             btn.disabled = unlockedWeapons[w] || gold < weaponCosts[w];
-            if(unlockedWeapons[w]) btn.innerText = "¡DESBLOQUEADO!";
+            if(unlockedWeapons[w]) $id('cost-weapon-'+w).innerText='¡DESBLOQUEADO!';
         }
 
-        const chassisBtn = document.getElementById('btn-upgrade-chassis');
+        const chassisBtn = $id('btn-upgrade-chassis');
         if (chassisLevel < 5) {
             chassisBtn.disabled = gold < chassisCost;
-            document.getElementById('cost-chassis').innerText = `$${chassisCost}`;
-            document.getElementById('chassis-next-desc').innerText = `Siguiente Nivel: ${chassisNames[chassisLevel]}`;
+            $id('cost-chassis').innerText = `$${chassisCost}`;
+            $id('chassis-next-desc').innerText = `Siguiente Nivel: ${chassisNames[chassisLevel]}`;
         } else {
             chassisBtn.disabled = true;
-            document.getElementById('cost-chassis').innerText = "MÁXIMO ALCANZADO";
-            document.getElementById('chassis-next-desc').innerText = "Chasis Base al Nivel Máximo (Mk. V)";
+            $id('cost-chassis').innerText = "MÁXIMO ALCANZADO";
+            $id('chassis-next-desc').innerText = "Chasis Base al Nivel Máximo (Mk. V)";
         }
     }
 
@@ -2115,7 +1936,7 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
             player.radius += 3; player.maxHealth += 40; player.health += 40;
             player.maxShield += 20; player.shield += 20; player.speed += 0.3;
             chassisCost = Math.floor(chassisCost * 1.8);
-            updateHUD(); document.getElementById('shop-gold').innerText = `Créditos: $${gold}`; updateShopButtons();
+            updateHUD(); $id('shop-gold').innerText = `Créditos: $${gold}`; updateShopButtons();
         }
     }
 
@@ -2143,12 +1964,12 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
                     { name: 'Cazador Voraz', desc: 'Recupera blindaje por cada baja.' }
                 ]); 
             }
-            updateHUD(); document.getElementById('shop-gold').innerText = `Créditos: $${gold}`; updateShopButtons();
+            updateHUD(); $id('shop-gold').innerText = `Créditos: $${gold}`; updateShopButtons();
         }
     }
 
     function renderSubclasses(subclassList) {
-        const container = document.getElementById('subclass-container');
+        const container = $id('subclass-container');
         container.innerHTML = '';
         subclassList.forEach(sub => {
             const card = document.createElement('div');
@@ -2168,7 +1989,7 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
         if(gold >= 800 && !selectedSubclass && chassisLevel >= 4) {
             gold -= 800; selectedSubclass = name;
             player.damage += 35; player.maxShield += 40; player.shield += 40;
-            updateHUD(); document.getElementById('shop-gold').innerText = `Créditos: $${gold}`; updateShopButtons();
+            updateHUD(); $id('shop-gold').innerText = `Créditos: $${gold}`; updateShopButtons();
         }
     }
 
@@ -2176,7 +1997,7 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
         if(gold >= 1500 && !isSupremeForm && chassisLevel >= 5) {
             gold -= 1500; isSupremeForm = true;
             player.cannons = Math.min(3, player.cannons + 2); player.damage += 70; player.speed += 1.2;
-            updateHUD(); document.getElementById('shop-gold').innerText = `Créditos: $${gold}`; updateShopButtons();
+            updateHUD(); $id('shop-gold').innerText = `Créditos: $${gold}`; updateShopButtons();
         }
     }
 
@@ -2198,62 +2019,62 @@ canvas{display:block;background:var(--bg);cursor:crosshair}
                 if (type === 'globalMagnet') hasGlobalMagnet = true;
                 if (type === 'spikes') {
                     spikeLevel++; spikeDamage += 18;
-                    document.getElementById('spikes-desc').innerText = `Espinas Nivel ${spikeLevel} (Daño: ${spikeDamage}/seg)`;
+                    $id('spikes-desc').innerText = `Espinas Nivel ${spikeLevel} (Daño: ${spikeDamage}/seg)`;
                 }
                 costs[type] = Math.floor(costs[type] * 1.45);
             }
 
             if(type !== 'globalMagnet') {
-                const btnEl = document.getElementById(`cost-${type}`);
+                const btnEl = $id(`cost-${type}`);
                 if(btnEl) btnEl.innerText = `$${costs[type]}`;
             } else {
-                document.getElementById('cost-globalMagnet').innerText = "¡COMPRADO!";
+                $id('cost-globalMagnet').innerText = "¡COMPRADO!";
             }
 
-            updateHUD(); document.getElementById('shop-gold').innerText = `Créditos: $${gold}`; updateShopButtons();
+            updateHUD(); $id('shop-gold').innerText = `Créditos: $${gold}`; updateShopButtons();
         }
     }
 
     function buyWeapon(w) {
         if (gold >= weaponCosts[w] && !unlockedWeapons[w]) {
             gold -= weaponCosts[w]; unlockedWeapons[w] = true;
-            document.getElementById(`w-${w}`).classList.remove('locked');
+            $id(`w-${w}`).classList.remove('locked');
             switchWeapon(w); updateHUD();
-            document.getElementById('shop-gold').innerText = `Créditos: $${gold}`; updateShopButtons();
+            $id('shop-gold').innerText = `Créditos: $${gold}`; updateShopButtons();
         }
     }
 
     function startNextWave() {
-        inShop = false; document.getElementById('shop-modal').style.display = 'none'; wave++; startWave();
+        inShop = false; $id('shop-modal').style.display = 'none'; wave++; startWave();
     }
 
     function endGame() {
         gameOver = true; checkHighScore();
-        document.getElementById('final-stats').innerText = `Sobreviviste hasta la Oleada ${wave} con ${selectedSubclass || selectedTankClass || chassisNames[chassisLevel - 1]}`;
-        document.getElementById('game-over-modal').style.display = 'flex';
+        $id('final-stats').innerText = `Sobreviviste hasta la Oleada ${wave} con ${selectedSubclass || selectedTankClass || chassisNames[chassisLevel - 1]}`;
+        $id('game-over-modal').style.display = 'flex';
     }
 
-    function restartGame() {
+    function resetShopTexts(){ for (const k in costs) { const el = $id('cost-' + k); if (el) el.innerText = '$' + costs[k]; } [[4,750],[5,1000],[6,1400],[7,2000]].forEach(([w,c]) => $id('cost-weapon-' + w).innerText = '$' + c); $id('cost-chassis').innerText = '$200'; }
+function restartGame() {
         gameOver = false; wave = 1; gold = 0; killsForFrenzy = 0; isFrenzyActive = false; activePowerUp = null;
         hasGlobalMagnet = false; selectedTankClass = null; selectedSubclass = null; isSupremeForm = false;
         spikeLevel = 0; spikeDamage = 0; chassisLevel = 1; chassisCost = 200; maxTurretsAllowed = 1;
         shockwaveKills = 0; isShockwaveReady = false; activeShockwaves = [];
         costs = { damage: 75, fireRate: 85, speed: 65, heal: 50, maxHp: 90, turretLimit: 250, addDrone: 180, globalMagnet: 500, spikes: 180 };
-        document.getElementById('spikes-desc').innerText = "Daña a enemigos cercanos al contacto";
+        $id('spikes-desc').innerText = "Daña a enemigos cercanos al contacto";
         player.health = 100; player.maxHealth = 100; player.shield = 50; player.maxShield = 50;
         player.damage = 30; player.fireRate = 220; player.speed = 4.2; player.cannons = 1;
         player.droneCount = 0; player.droneDamage = 10; player.radius = 24; player.x = 0; player.y = 0;
         unlockedWeapons = { 1: true, 2: true, 3: true, 4: false, 5: false, 6: false, 7: false };
-        for(let w=4; w<=7; w++) document.getElementById(`w-${w}`).classList.add('locked');
+        for(let w=4; w<=7; w++) $id(`w-${w}`).classList.add('locked');
         switchWeapon(1);
-        playerBullets = []; heavyProjectiles = []; blackHoles = []; droneBullets = []; turretBullets = []; enemyBullets = []; enemies = []; particles = []; mines = []; powerUps = []; meteorWarnings = []; droppedCoins = [];
-        document.getElementById('game-over-modal').style.display = 'none';
+        turrets = []; raidActive = false; raidTimeLeft = 300; iFrameTimer = 0; paused = false; skillReady = mineReady = turretReady = siphonReady = true; ['skill-cd','mine-cd','turret-cd','siphon-cd'].forEach(i => $id(i).style.height = '0%'); resetShopTexts(); inShop = false; playerBullets = []; heavyProjectiles = []; blackHoles = []; droneBullets = []; turretBullets = []; enemyBullets = []; enemies = []; particles = []; mines = []; powerUps = []; meteorWarnings = []; droppedCoins = [];
+        $id('game-over-modal').style.display = 'none';
         applyRebirthPermanentStats();
         startWave();
     }
 
-    checkHighScore();
-    loop();
+    loadRebirth(); checkHighScore(); loop();
 </script>
 </body>
 </html>
